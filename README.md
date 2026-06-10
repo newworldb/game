@@ -1,10 +1,14 @@
-# Tiny Poker 🃏
+# Tiny Arcade 🕹️
 
-Mobile-first **No-Limit Texas Hold'em** for the browser. Pure vanilla
-JavaScript — no dependencies, no build step. Your bankroll and stats save
-automatically to your browser.
+Little games built for your phone — pure vanilla JavaScript, no dependencies,
+no build step, everything saves locally in your browser.
 
-> 🚆 Looking for the transport game? It lives at [`/transport/`](transport/).
+| Game | Path | What it is |
+|------|------|------------|
+| 🃏 **Tiny Poker** | [`/poker/`](poker/) | No-Limit Texas Hold'em vs 4 AI bots |
+| 🚆 **Tiny Transport** | [`/transport/`](transport/) | 3D transport tycoon with living towns |
+
+The root `index.html` is the arcade front page linking both games.
 
 ## Play
 
@@ -16,7 +20,7 @@ npx serve .
 python3 -m http.server 8000
 ```
 
-## Features
+## Tiny Poker features
 
 - **Full NLHE rules** — blinds, dealer button rotation, min-raise tracking,
   all-ins with **correct side pots**, split pots, showdown ordering.
@@ -31,13 +35,14 @@ python3 -m http.server 8000
 
 ## Development
 
-The engine is DOM-free (`js/cards.js`, `js/ai.js`, `js/engine.js`) and covered
+The poker engine is DOM-free (`poker/js/cards.js`, `ai.js`, `engine.js`) and covered
 by a headless test that checks the hand evaluator and simulates 300 full
 bot-vs-bot hands verifying chip conservation:
 
 ```bash
-node test/poker-smoke.js     # poker engine + evaluator
-node transport/test/smoke.js # transport game logic
+node poker/test/poker-smoke.js  # poker engine + evaluator
+node transport/test/smoke.js    # transport game logic
 ```
 
-UI lives in `js/ui.js`, `js/save.js`, `js/main.js`.
+Poker UI lives in `poker/js/ui.js`, `poker/js/save.js`, `poker/js/main.js`.
+See `transport/README.md` for the transport game's docs.

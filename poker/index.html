@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0c1220">
+<title>Tiny Poker — No-Limit Hold'em</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="topbar">
+  <button id="btnMenu">☰</button>
+  <div id="blinds">Blinds 10/20</div>
+  <div id="handNo"></div>
+</div>
+
+<div id="table">
+  <div id="felt"></div>
+  <div id="seats"></div>
+  <div id="center">
+    <div id="pot"></div>
+    <div id="board"></div>
+    <div id="log"></div>
+  </div>
+</div>
+
+<div id="actions" class="hidden">
+  <div id="actInfo"></div>
+  <div id="actRow">
+    <button id="btnFold" class="abtn fold">Fold</button>
+    <button id="btnCall" class="abtn call">Check</button>
+    <button id="btnRaise" class="abtn raise">Raise</button>
+  </div>
+  <div id="raisePanel" class="hidden">
+    <div id="raiseAmt"></div>
+    <input type="range" id="raiseSlider" min="0" max="100" value="0">
+    <div id="raiseQuick">
+      <button data-q="min">Min</button>
+      <button data-q="half">½ Pot</button>
+      <button data-q="pot">Pot</button>
+      <button data-q="allin">All-in</button>
+    </div>
+    <div id="raiseConfirmRow">
+      <button id="btnRaiseCancel" class="abtn gray">Back</button>
+      <button id="btnRaiseGo" class="abtn raise">Raise</button>
+    </div>
+  </div>
+</div>
+
+<div id="panel" class="hidden">
+  <div id="panelHead"><div id="panelTitle"></div><button id="panelClose">✕</button></div>
+  <div id="panelBody"></div>
+</div>
+
+<div id="toast" class="hidden"></div>
+
+<script src="js/cards.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/save.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

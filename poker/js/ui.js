@@ -256,8 +256,11 @@ const UI = {
       }
     });
     const r = UI.row('<button class="btn gray" style="width:100%">🚆 Play Tiny Transport (our other game)</button>');
-    r.querySelector('button').onclick = () => { location.href = 'transport/'; };
+    r.querySelector('button').onclick = () => { location.href = '../transport/'; };
     b.appendChild(r);
+    const r2 = UI.row('<button class="btn gray" style="width:100%">🕹️ Arcade home</button>');
+    r2.querySelector('button').onclick = () => { location.href = '../'; };
+    b.appendChild(r2);
   },
 
   showHelp(){

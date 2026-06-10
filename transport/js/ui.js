@@ -402,6 +402,7 @@ const UI = {
         nb.textContent = 'Tap to confirm — current game is lost';
       }
     });
+    mk('🕹️ Arcade home (Tiny Poker & more)', 'gray', () => { location.href = '../'; });
     b.appendChild(UI.row('<div class="sub grow">Tiny Transport — autosaves every 30s in your browser.</div>'));
   },
 
