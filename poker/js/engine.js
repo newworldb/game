@@ -17,6 +17,7 @@ const Engine = {
   SUPER_LEVELS: [[25, 50], [50, 100], [75, 150], [100, 200], [150, 300], [250, 500], [400, 800], [600, 1200]],
   SUPER_LEVEL_HANDS: 2,
   paceMult: 1,                        // sleep scaling: super turbo runs ~3x faster
+  online: false,                      // online table (remote humans in bot seats)
   tourneyHands: 0,
   seats: [],
   button: -1,
@@ -42,6 +43,7 @@ const Engine = {
 
   init(humanStack, mode){
     Engine.mode = (mode === 'tourney' || mode === 'super') ? mode : 'cash';
+    Engine.online = false;
     Engine.tourneyHands = 0;
     Engine.paceMult = Engine.mode === 'super' ? 0.3 : 1;
     if (Engine.mode === 'cash'){ Engine.cfg.SB = 10; Engine.cfg.BB = 20; }
@@ -54,7 +56,7 @@ const Engine = {
       tight, aggr,
       cards: [], bet: 0, total: 0, folded: true, allin: false,
       acted: false, revealed: false, raises: 0, lastAction: '', winAmt: 0,
-      out: false, finish: 0,
+      out: false, finish: 0, remote: null,
     });
     Engine.seats = [seat(0, 'You', '🙂', true, 1, 1)];
     Engine.BOTS.forEach((b, k) => Engine.seats.push(seat(k + 1, b.name, b.emoji, false, b.tight, b.aggr)));
@@ -252,6 +254,9 @@ const Engine = {
       bb: Engine.cfg.BB,
       nOpp: Engine.active().length - 1,
       canRaise: p.bet + p.stack > Engine.currentBet,
+      stack: p.stack,
+      bet: p.bet,
+      online: Engine.online,
     };
   },
 
@@ -262,6 +267,12 @@ const Engine = {
       if (gen !== Engine.gen) return { type: 'fold' };
       if (!act) return { type: ctx.toCall > 0 ? 'fold' : 'check' };
       return act;
+    }
+    if (p.remote && typeof Net !== 'undefined'){
+      const act = await Net.requestAction(p, ctx);
+      if (gen !== Engine.gen) return { type: 'fold' };
+      if (act && act.type) return act;
+      // connection lost mid-request: fall through to AI
     }
     await Engine.zzz(500 + Math.random() * 900);
     if (gen !== Engine.gen) return { type: 'fold' };

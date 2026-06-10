@@ -24,7 +24,17 @@ button{font-family:inherit;cursor:pointer;}
 
 #center{position:absolute;left:50%;top:43%;transform:translate(-50%,-50%);
   display:flex;flex-direction:column;align-items:center;gap:8px;width:90vw;pointer-events:none;}
-#pot{font-size:15px;font-weight:800;color:#fbbf24;text-shadow:0 1px 3px rgba(0,0,0,.7);min-height:18px;}
+#pot{font-size:15px;font-weight:800;color:#fbbf24;text-shadow:0 1px 3px rgba(0,0,0,.7);min-height:34px;
+  display:flex;align-items:flex-end;gap:8px;}
+.chipwrap{display:flex;flex-direction:column;align-items:center;gap:1px;pointer-events:none;}
+.chipstack{position:relative;width:26px;height:34px;}
+.chip3{position:absolute;left:0;width:26px;height:14px;border-radius:50%;
+  border-bottom:4px solid #000;box-shadow:inset 0 2px 2px rgba(255,255,255,.35), 0 1px 2px rgba(0,0,0,.5);}
+.chip3::after{content:'';position:absolute;inset:3px 5px;border-radius:50%;
+  border:1.5px dashed rgba(255,255,255,.55);}
+.chiplabel{font-size:10px;font-weight:800;color:#fff;text-shadow:0 1px 2px #000;background:rgba(0,0,0,.45);
+  border-radius:8px;padding:0 5px;}
+.betchips{position:absolute;left:50%;transform:translateX(-50%);}
 #board{display:flex;gap:6px;min-height:74px;}
 #log{font-size:12px;color:#cbd5e1;text-shadow:0 1px 2px #000;min-height:16px;text-align:center;max-width:86vw;}
 
@@ -55,8 +65,7 @@ button{font-family:inherit;cursor:pointer;}
 .seat .stk{font-size:11px;color:#86efac;font-weight:700;text-shadow:0 1px 2px #000;}
 .seat .cards{display:flex;gap:3px;min-height:43px;}
 .seat .act{font-size:10px;color:#fbbf24;font-weight:700;min-height:12px;text-shadow:0 1px 2px #000;}
-.seat .betchip{position:absolute;font-size:11px;font-weight:800;color:#fff;background:#b45309;
-  border:1px solid #f59e0b;border-radius:10px;padding:1px 7px;white-space:nowrap;box-shadow:0 1px 3px #000;}
+.seat .betchip{display:none;}
 .seat .dbtn{position:absolute;width:18px;height:18px;border-radius:50%;background:#f8fafc;color:#0f172a;
   font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px #000;}
 .seat .winamt{position:absolute;top:-22px;font-size:14px;font-weight:900;color:#4ade80;text-shadow:0 1px 3px #000;animation:rise 1.6s ease-out;}

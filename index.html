@@ -38,7 +38,7 @@ h1{
 
 /* dealt cards */
 main{display:flex;flex-direction:column;gap:30px;width:100%;max-width:400px;align-items:center;}
-@media (min-width:880px){ main{max-width:1240px;flex-direction:row;justify-content:center;gap:40px;align-items:stretch;} }
+@media (min-width:880px){ main{max-width:920px;flex-direction:row;flex-wrap:wrap;justify-content:center;gap:40px;align-items:stretch;} }
 
 .pcard{
   display:block;text-decoration:none;width:100%;max-width:340px;
@@ -144,6 +144,17 @@ footer a{color:#e8c558;}
        up every two hands — and <b>every card is dealt face up</b>. Pure chaos.</p>
     <div class="terms">$100 buy-in · 3-sec clock · x-ray · prizes $300 / $150 / $50</div>
     <span class="chipbtn gold">⚡ Blink and It's Over</span>
+  </a>
+
+  <a class="pcard right" href="poker/?mode=online">
+    <span class="pip tl blk"><span class="rk">10</span><span class="st">♣</span></span>
+    <span class="pip br blk"><span class="rk">10</span><span class="st">♣</span></span>
+    <div class="shot"><img src="assets/poker.png?v=8" alt="An online table with friends"></div>
+    <h2>🌐 Online</h2>
+    <p>Deal a private table and text the 4-letter code to your friends —
+       up to five of you, each on your own phone. Empty seats get bots.</p>
+    <div class="terms">peer-to-peer · play chips · 25-sec clock</div>
+    <span class="chipbtn blk">♣ Gather the Table</span>
   </a>
 </main>
 

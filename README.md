@@ -9,6 +9,8 @@ The root `index.html` is the casino lobby with two ways to play:
 |------|------|-------|
 | 💵 **Cash game** | `poker/?mode=cash` | Blinds $10/$20, sit with your bankroll, rebuy when busted |
 | 🏆 **Sit & Go tournament** | `poker/?mode=tourney` | $200 buy-in, 1,500 chips, blinds up every 6 hands, no rebuys, top 3 of 5 paid $600/$300/$100 |
+| ⚡ **Super Turbo** | `poker/?mode=super` | $100 buy-in, 500 chips, blinds up every 2 hands, 3-second action clock, all cards face up |
+| 🌐 **Online** | `poker/?mode=online` | Host a room, share a 4-letter code, up to 5 friends peer-to-peer (PeerJS/WebRTC); empty seats get bots |
 
 (The repo also still contains the older Tiny Transport game under
 `/transport/`, unlinked from the site.)
@@ -35,6 +37,11 @@ python3 -m http.server 8000
   Pot / All-in shortcuts.
 - **Tournament mode** — rising blind levels, eliminations with final
   placements, prize payouts into your bankroll, titles tracked.
+- **Online multiplayer** — host-authoritative over WebRTC data channels;
+  guests get per-seat sanitized views (no card leaks), 25s action clock,
+  disconnected players are taken over by bots.
+- **3D chip stacks** — bets and the pot render as stacked casino chips
+  built from real denominations ($1000 gold down to $1 white).
 - **Persistence** — bankroll, hands played/won, biggest pot, tournaments and
   titles are kept in `localStorage`.
 
