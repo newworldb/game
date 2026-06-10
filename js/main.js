@@ -12,7 +12,13 @@
   }
 
   window.addEventListener('load', () => {
-    Render.init();
+    try {
+      Render.init();
+    } catch (e) {
+      console.error(e);
+      document.body.innerHTML = '<p style="padding:40px;text-align:center">This game needs WebGL — please use a modern browser.</p>';
+      return;
+    }
     UI.init();
     const loaded = Save.load();
     if (!loaded) Game.newGame((Math.random() * 1e9) | 0);

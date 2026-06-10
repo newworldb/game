@@ -14,6 +14,8 @@ const UI = {
 
     document.getElementById('panelClose').onclick = () => UI.closePanel();
     document.getElementById('btnMenu').onclick = () => UI.showMenu();
+    const rot = document.getElementById('btnRot');
+    if (rot) rot.onclick = () => { G.cam.rot = ((G.cam.rot || 0) + Math.PI / 4) % (Math.PI * 2); };
     document.querySelectorAll('#speed button').forEach(b => {
       b.onclick = () => {
         G.speed = +b.dataset.speed;

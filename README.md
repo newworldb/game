@@ -1,7 +1,7 @@
 # Tiny Transport 🚌🚆
 
-A mobile-first web transport tycoon game inspired by Transport Fever / Transport Tycoon.
-Pure HTML5 Canvas + vanilla JavaScript — no dependencies, no build step, works offline-ish
+A mobile-first **3D** web transport tycoon game inspired by Transport Fever / Transport Tycoon.
+WebGL (Three.js, vendored — no build step, no CDN) + vanilla JavaScript,
 and saves automatically to your browser.
 
 ## Play
@@ -35,6 +35,9 @@ Then open `http://localhost:8000` (or your machine's LAN IP from a phone).
   more houses, more passengers, more demand.
 - **Economy** — monthly running costs, finance panel with income per cargo,
   construction costs and net result.
+- **3D world** — WebGL isometric-style view with rotatable camera (⟳ button,
+  45° steps), terrain with hills, coast cliffs and bridges, instanced trees
+  and houses, 3D vehicles and colored 3D line ribbons.
 - **Mobile controls** — pan, pinch-zoom, tap to inspect, drag-to-build with
   two-finger pan, large touch-friendly UI.
 - **Persistence** — autosaves to `localStorage` every 30 s and on tab hide.
@@ -49,4 +52,5 @@ Game logic is DOM-free (`js/util.js`, `data.js`, `path.js`, `game.js`, `map.js`,
 node test/smoke.js
 ```
 
-Rendering/UI lives in `js/render.js`, `input.js`, `ui.js`, `save.js`, `main.js`.
+Rendering/UI lives in `js/render.js` (Three.js 3D renderer), `input.js`,
+`ui.js`, `save.js`, `main.js`. Three.js r147 is vendored at `js/lib/three.min.js`.

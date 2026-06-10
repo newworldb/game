@@ -50,7 +50,7 @@ const Build = {
     for (const t of plan.tiles){
       if (t.has) continue;
       G.state.net[t.i] |= bit;
-      if (G.state.terrain[t.i] === 2) G.state.terrain[t.i] = 1;
+      if (G.state.terrain[t.i] === 2){ G.state.terrain[t.i] = 1; G.terrainVersion++; }
       built++;
     }
     if (built){ Game.spend(plan.cost); G.netVersion++; }
@@ -111,7 +111,7 @@ const Build = {
     }
     const st = { id: Game.nid(), type, x, y, name, cargo: {} };
     s.stations.push(st);
-    s.terrain[i] = 1;
+    if (s.terrain[i] !== 1){ s.terrain[i] = 1; G.terrainVersion++; }
     s.net[i] |= Build.bit(def.net);
     G.occ.set(i, { k: 'station', id: st.id });
     Game.spend(def.cost);
@@ -143,7 +143,7 @@ const Build = {
     const i = Game.idx(x, y);
     const dep = { id: Game.nid(), kind, x, y };
     s.depots.push(dep);
-    s.terrain[i] = 1;
+    if (s.terrain[i] !== 1){ s.terrain[i] = 1; G.terrainVersion++; }
     s.net[i] |= Build.bit(kind);
     G.occ.set(i, { k: 'depot', id: dep.id });
     Game.spend(def.cost);

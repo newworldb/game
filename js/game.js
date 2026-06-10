@@ -4,6 +4,7 @@ const G = {
   state: null,
   occ: new Map(),        // tileIndex -> {k:'house'|'ind'|'station'|'depot', id}
   netVersion: 0,         // bumped on any network change; vehicles revalidate paths
+  terrainVersion: 0,     // bumped when terrain changes (forest cleared etc.)
   tool: 'select',
   preview: null,
   selected: null,
@@ -220,6 +221,7 @@ const Game = {
       s.terrain[i] = 1;
       tw.tiles.push(i);
       G.occ.set(i, { k: 'house', id: tw.id });
+      G.terrainVersion++;
       return true;
     }
     return false;
