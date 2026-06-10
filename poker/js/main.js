@@ -2,7 +2,10 @@
 (function(){
   window.addEventListener('load', () => {
     const first = !Save.load();
-    const mq = new URLSearchParams(location.search).get('mode');
+    // mode comes from ?mode= or #hash — the hash survives CDN interstitials
+    const qp = new URLSearchParams(location.search).get('mode');
+    const hp = (location.hash || '').replace(/^#(mode=)?/, '');
+    const mq = qp || hp;
     const mode = (mq === 'tourney' || mq === 'super' || mq === 'online') ? mq : 'cash';
     UI.init();
 

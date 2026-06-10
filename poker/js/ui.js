@@ -245,6 +245,11 @@ const UI = {
 
   placeStr(n){ return n + (n === 1 ? 'st' : n === 2 ? 'nd' : n === 3 ? 'rd' : 'th'); },
 
+  goMode(m){
+    location.hash = m;
+    location.reload();
+  },
+
   render(view){
     UI.lastView = view;
     const e = UI.els;
@@ -493,10 +498,10 @@ const UI = {
       (prize > 0 ? '+$' + prize : '—') + '</b>'));
     b.appendChild(UI.row('<div class="grow">Bankroll</div><div>$' + Save.data.bank + '</div>'));
     if (Engine.mode === 'super')
-      UI.btnRow(b, '⚡ Another Super Turbo ($' + Engine.SUPER_BUYIN + ')', '', () => { location.href = '?mode=super'; });
+      UI.btnRow(b, '⚡ Another Super Turbo ($' + Engine.SUPER_BUYIN + ')', '', () => UI.goMode('super'));
     else
-      UI.btnRow(b, '🔁 Play another Sit & Go ($' + Engine.BUYIN + ')', '', () => { location.href = '?mode=tourney'; });
-    UI.btnRow(b, '💵 Switch to cash game', 'gray', () => { location.href = '?mode=cash'; });
+      UI.btnRow(b, '🔁 Play another Sit & Go ($' + Engine.BUYIN + ')', '', () => UI.goMode('tourney'));
+    UI.btnRow(b, '💵 Switch to cash game', 'gray', () => UI.goMode('cash'));
     UI.btnRow(b, '🃏 Back to lobby', 'gray', () => { location.href = '../'; });
   },
 
