@@ -303,6 +303,7 @@ const App = {
   form: { dest: 'chiangmai', style: 'mid', nights: 3, people: 2, start: '', inclFlights: false },
 
   t(k){ return (I18N[Core.state.lang] || I18N.en)[k] || k; },
+  img(key){ return 'assets/dest/' + key + '.jpg'; },
   dname(d){ return Core.state.lang === 'th' ? d.th : d.en; },
 
   init(){
@@ -380,13 +381,13 @@ const App = {
       const sp = Core.spent(trip).total;
       const pct = total > 0 ? Math.min(100, Math.round(sp / total * 100)) : 0;
       const card = App.el(
-        '<div class="tripcard">' +
-        '<div class="tc-head"><span class="tc-emoji">' + d.emoji + '</span>' +
-        '<div class="grow"><div class="tc-name">' + App.dname(d) + '</div>' +
-        '<div class="tc-sub">' + trip.nights + ' ' + App.t('daysLeft') + ' · ' + trip.people + ' 🧍 · ' + App.t(trip.style === 'budget' ? 'sBudget' : trip.style === 'comfort' ? 'sComfort' : 'sMid') + '</div></div>' +
+        '<div class="tripcard photo">' +
+        '<div class="tc-photo" style="background-image:url(' + App.img(trip.dest) + ')">' +
+        '<div class="tc-overlay"><div class="tc-name">' + App.dname(d) + '</div>' +
+        '<div class="tc-osub">' + trip.nights + ' ' + App.t('daysLeft') + ' · ' + trip.people + ' ' + (Core.state.lang === 'th' ? 'คน' : 'pax') + ' · ' + App.t(trip.style === 'budget' ? 'sBudget' : trip.style === 'comfort' ? 'sComfort' : 'sMid') + '</div></div>' +
         '<div class="tc-amt">' + Core.fmt(total) + '</div></div>' +
-        '<div class="bar"><div class="fill' + (sp > total ? ' over' : '') + '" style="width:' + pct + '%"></div></div>' +
-        '<div class="tc-sub">' + App.t('spent') + ' ' + Core.fmt(sp) + ' · ' + App.t('remaining') + ' ' + Core.fmt(total - sp) + '</div>' +
+        '<div class="tc-body"><div class="bar"><div class="fill' + (sp > total ? ' over' : '') + '" style="width:' + pct + '%"></div></div>' +
+        '<div class="tc-sub">' + App.t('spent') + ' ' + Core.fmt(sp) + ' · ' + App.t('remaining') + ' ' + Core.fmt(total - sp) + '</div></div>' +
         '</div>');
       card.onclick = () => App.go('trip-' + trip.id);
       w.appendChild(card);
@@ -402,7 +403,9 @@ const App = {
     const grid = App.el('<div class="destgrid"></div>');
     for (const key in DESTS){
       const d = DESTS[key];
-      const b = App.el('<button class="dest' + (f.dest === key ? ' on' : '') + '"><span>' + d.emoji + '</span>' + App.dname(d) + '</button>');
+      const b = App.el('<button class="pdest' + (f.dest === key ? ' on' : '') + '" style="background-image:url(' + App.img(key) + ')">' +
+        '<span class="pd-name">' + App.dname(d) + '</span>' +
+        (f.dest === key ? '<span class="pd-check">✓</span>' : '') + '</button>');
       b.onclick = () => { f.dest = key; App.render(); };
       grid.appendChild(b);
     }
@@ -507,11 +510,12 @@ const App = {
     for (const o of opts.slice(0, 10)){
       const d = DESTS[o.dest];
       const card = App.el(
-        '<div class="tripcard plancard"><div class="tc-head"><span class="tc-emoji">' + d.emoji + '</span>' +
-        '<div class="grow"><div class="tc-name">' + App.dname(d) + ' · ' + o.nights + ' ' + App.t('daysLeft') + '</div>' +
-        '<div class="tc-sub">' + Core.fmt(o.total) + ' · ' + App.t('left') + ' ' + Core.fmt(o.left) +
+        '<div class="plancard2"><div class="pl-thumb" style="background-image:url(' + App.img(o.dest) + ')"></div>' +
+        '<div class="grow"><div class="tc-name">' + App.dname(d) + '</div>' +
+        '<div class="pl-n">' + o.nights + ' ' + App.t('daysLeft') + '</div>' +
+        '<div class="tc-sub">' + Core.fmt(o.total) + ' · ' + App.t('left') + ' <b style="color:#1f9d61">' + Core.fmt(o.left) + '</b>' +
         (o.inclFlights ? ' · ✈️' : '') + '</div></div>' +
-        '<span class="bk-go">' + App.t('pickPlan') + ' →</span></div></div>');
+        '<span class="bk-go">' + App.t('pickPlan') + ' →</span></div>');
       card.onclick = () => {
         const trip = Core.newTrip({ dest: o.dest, style: o.style, nights: o.nights, people: f.people, start: '', inclFlights: o.inclFlights });
         App.tab = 'budget';
@@ -534,10 +538,10 @@ const App = {
     const w = App.el('<div></div>');
 
     const head = App.el(
-      '<div class="triphead"><button class="back">←</button>' +
-      '<div class="grow"><div class="tc-name">' + d.emoji + ' ' + App.dname(d) + '</div>' +
-      '<div class="tc-sub">' + trip.nights + ' ' + App.t('daysLeft') + ' · ' + trip.people + ' 🧍' + (trip.start ? ' · ' + trip.start : '') + '</div></div>' +
-      '<button class="iconb" id="shareB">📤</button></div>');
+      '<div class="hero" style="background-image:url(' + App.img(trip.dest) + ')">' +
+      '<button class="back hbtn">←</button><button class="hbtn share" id="shareB">📤</button>' +
+      '<div class="hero-txt"><div class="hero-name">' + App.dname(d) + '</div>' +
+      '<div class="hero-sub">' + trip.nights + ' ' + App.t('daysLeft') + ' · ' + trip.people + ' ' + (Core.state.lang === 'th' ? 'คน' : 'pax') + (trip.start ? ' · ' + trip.start : '') + '</div></div></div>');
     head.querySelector('.back').onclick = () => App.go('home');
     head.querySelector('#shareB').onclick = () => App.shareTrip(trip);
     w.appendChild(head);
