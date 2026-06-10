@@ -1,64 +1,208 @@
 'use strict';
 const UI = {
   els: {},
+  _res: null,
+  _ctx: null,
+  _raiseTo: 0,
   toastTimer: null,
+  logTimer: null,
+
+  // seat positions (percent of #table), hero last
+  SEAT_POS: [
+    { x: 50, y: 78 },  // hero (seat 0)
+    { x: 13, y: 56 },
+    { x: 20, y: 22 },
+    { x: 80, y: 22 },
+    { x: 87, y: 56 },
+  ],
 
   init(){
-    UI.els.money = document.getElementById('money');
-    UI.els.date = document.getElementById('date');
-    UI.els.panel = document.getElementById('panel');
-    UI.els.title = document.getElementById('panelTitle');
-    UI.els.body = document.getElementById('panelBody');
-    UI.els.banner = document.getElementById('banner');
-    UI.els.toast = document.getElementById('toast');
-
-    document.getElementById('panelClose').onclick = () => UI.closePanel();
-    document.getElementById('btnMenu').onclick = () => UI.showMenu();
-    const rot = document.getElementById('btnRot');
-    if (rot) rot.onclick = () => { G.cam.rot = ((G.cam.rot || 0) + Math.PI / 4) % (Math.PI * 2); };
-    document.querySelectorAll('#speed button').forEach(b => {
-      b.onclick = () => {
-        G.speed = +b.dataset.speed;
-        document.querySelectorAll('#speed button').forEach(q => q.classList.toggle('on', q === b));
-      };
-    });
-    document.querySelectorAll('#toolbar .tool').forEach(b => {
-      b.onclick = () => {
-        if (b.dataset.panel){
-          if (b.dataset.panel === 'lines') UI.showLines();
-          else UI.showFinance();
-          return;
-        }
-        UI.setTool(b.dataset.tool);
-        UI.toolHint(b.dataset.tool);
-      };
-    });
-  },
-
-  setTool(t){
-    G.tool = t;
-    G.preview = null;
-    document.querySelectorAll('#toolbar .tool[data-tool]').forEach(b =>
-      b.classList.toggle('on', b.dataset.tool === t));
-  },
-
-  toolHint(t){
-    const hints = {
-      road: 'Drag on the map to build road · ' + U.money(Build.netBase.road) + '/tile · two fingers to pan',
-      rail: 'Drag to lay rail · ' + U.money(Build.netBase.rail) + '/tile · two fingers to pan',
-      bulldoze: 'Tap or drag to demolish roads, rails, stations and depots',
-      bus: 'Tap near houses, on or beside a road (' + U.money(D.STATION_TYPES.bus.cost) + ')',
-      truck: 'Tap near an industry or town (' + U.money(D.STATION_TYPES.truck.cost) + ')',
-      train: 'Tap to place a rail station (' + U.money(D.STATION_TYPES.train.cost) + ')',
-      rdepot: 'Tap beside a road — buy buses & trucks here (' + U.money(D.DEPOT_TYPES.road.cost) + ')',
-      tdepot: 'Tap beside rails — buy trains here (' + U.money(D.DEPOT_TYPES.rail.cost) + ')',
+    const $ = id => document.getElementById(id);
+    UI.els = {
+      seats: $('seats'), board: $('board'), pot: $('pot'), log: $('log'),
+      actions: $('actions'), actInfo: $('actInfo'),
+      btnFold: $('btnFold'), btnCall: $('btnCall'), btnRaise: $('btnRaise'),
+      raisePanel: $('raisePanel'), raiseAmt: $('raiseAmt'), raiseSlider: $('raiseSlider'),
+      panel: $('panel'), panelTitle: $('panelTitle'), panelBody: $('panelBody'),
+      toast: $('toast'), handNo: $('handNo'), blinds: $('blinds'),
     };
-    if (hints[t]) UI.toast(hints[t]);
+    $('panelClose').onclick = () => UI.closePanel();
+    $('btnMenu').onclick = () => UI.showMenu();
+    UI.els.btnFold.onclick = () => UI.act({ type: 'fold' });
+    UI.els.btnCall.onclick = () => {
+      if (!UI._ctx) return;
+      UI.act({ type: UI._ctx.toCall > 0 ? 'call' : 'check' });
+    };
+    UI.els.btnRaise.onclick = () => UI.openRaise();
+    $('btnRaiseCancel').onclick = () => UI.els.raisePanel.classList.add('hidden');
+    $('btnRaiseGo').onclick = () => UI.act({ type: 'raise', to: UI._raiseTo });
+    UI.els.raiseSlider.oninput = () => {
+      const c = UI._ctx;
+      if (!c) return;
+      const t = UI.els.raiseSlider.value / 100;
+      UI.setRaiseTo(Math.round(c.minTo + (c.maxTo - c.minTo) * t));
+    };
+    document.querySelectorAll('#raiseQuick button').forEach(b => {
+      b.onclick = () => {
+        const c = UI._ctx;
+        if (!c) return;
+        const hero = Engine.human();
+        let to = c.minTo;
+        if (b.dataset.q === 'half') to = c.toCall + hero.bet + Math.round((c.pot + c.toCall) * 0.5);
+        else if (b.dataset.q === 'pot') to = c.toCall + hero.bet + (c.pot + c.toCall);
+        else if (b.dataset.q === 'allin') to = c.maxTo;
+        UI.setRaiseTo(to);
+      };
+    });
+  },
+
+  // ---- engine hooks ----
+  human(ctx){
+    UI._ctx = ctx;
+    const e = UI.els;
+    e.actions.classList.remove('hidden');
+    e.raisePanel.classList.add('hidden');
+    e.btnCall.textContent = ctx.toCall > 0 ? 'Call $' + Math.min(ctx.toCall, Engine.human().stack) : 'Check';
+    e.btnRaise.textContent = ctx.toCall > 0 ? 'Raise' : 'Bet';
+    e.btnRaise.style.display = ctx.canRaise ? '' : 'none';
+    e.actInfo.textContent = 'Pot $' + ctx.pot + (ctx.toCall > 0 ? ' · $' + ctx.toCall + ' to call' : '');
+    return new Promise(res => { UI._res = res; });
+  },
+
+  act(a){
+    const e = UI.els;
+    e.actions.classList.add('hidden');
+    const r = UI._res;
+    UI._res = null;
+    UI._ctx = null;
+    if (r) r(a);
+  },
+
+  openRaise(){
+    const c = UI._ctx;
+    if (!c) return;
+    UI.els.raisePanel.classList.remove('hidden');
+    UI.els.raiseSlider.value = 0;
+    UI.setRaiseTo(c.minTo);
+  },
+
+  setRaiseTo(to){
+    const c = UI._ctx;
+    if (!c) return;
+    UI._raiseTo = Math.max(c.minTo, Math.min(c.maxTo, Math.round(to)));
+    const allin = UI._raiseTo >= c.maxTo;
+    UI.els.raiseAmt.textContent = (allin ? 'ALL-IN $' : '$') + UI._raiseTo;
+    document.getElementById('btnRaiseGo').textContent =
+      (c.toCall > 0 ? 'Raise to $' : 'Bet $') + UI._raiseTo;
+    const t = (UI._raiseTo - c.minTo) / Math.max(1, c.maxTo - c.minTo);
+    UI.els.raiseSlider.value = Math.round(t * 100);
+  },
+
+  cardEl(c, sm){
+    const d = document.createElement('div');
+    if (c === null){
+      d.className = 'card back' + (sm ? ' sm' : '');
+      return d;
+    }
+    d.className = 'card ' + (Cards.isRed(c) ? 'red' : 'black') + (sm ? ' sm' : '');
+    d.innerHTML = '<span class="cr">' + Cards.rankStr(c) + '</span><span class="cs">' + Cards.suitStr(c) + '</span>';
+    return d;
+  },
+
+  update(){
+    const e = UI.els;
+    e.handNo.textContent = Engine.handNo ? 'Hand #' + Engine.handNo : '';
+    e.blinds.textContent = 'Blinds ' + Engine.cfg.SB + '/' + Engine.cfg.BB;
+    // pot + board
+    const pot = Engine.pot();
+    e.pot.textContent = pot > 0 ? 'Pot  $' + pot : '';
+    e.board.innerHTML = '';
+    for (const c of Engine.board) e.board.appendChild(UI.cardEl(c));
+    // seats
+    e.seats.innerHTML = '';
+    const tw = e.seats.parentElement.clientWidth, th = e.seats.parentElement.clientHeight;
+    Engine.seats.forEach((p, i) => {
+      const pos = UI.SEAT_POS[i] || UI.SEAT_POS[0];
+      const d = document.createElement('div');
+      d.className = 'seat' + (p.isHuman ? ' hero' : '') +
+        (p.folded ? ' folded' : '') + (p.turn ? ' turn' : '') + (p.winAmt > 0 ? ' winner' : '');
+      d.style.left = pos.x + '%';
+      d.style.top = pos.y + '%';
+
+      const cards = document.createElement('div');
+      cards.className = 'cards';
+      if (p.cards.length && !p.folded){
+        const show = p.isHuman || p.revealed;
+        for (const c of p.cards) cards.appendChild(UI.cardEl(show ? c : null, !p.isHuman));
+      }
+      if (p.isHuman) d.appendChild(cards);
+
+      const ava = document.createElement('div');
+      ava.className = 'ava';
+      ava.textContent = p.emoji;
+      if (Engine.button === i){
+        const db = document.createElement('div');
+        db.className = 'dbtn';
+        db.textContent = 'D';
+        db.style.right = '-6px';
+        db.style.bottom = '-4px';
+        ava.appendChild(db);
+      }
+      d.appendChild(ava);
+
+      const nm = document.createElement('div');
+      nm.className = 'nm';
+      nm.textContent = p.name;
+      d.appendChild(nm);
+      const stk = document.createElement('div');
+      stk.className = 'stk';
+      stk.textContent = '$' + p.stack;
+      d.appendChild(stk);
+      if (p.isHuman && Engine.button === i){
+        const db = document.createElement('div');
+        db.className = 'dbtn';
+        db.style.right = '8px';
+        db.style.top = '0';
+        db.textContent = 'D';
+        d.appendChild(db);
+      }
+      if (!p.isHuman) d.appendChild(cards);
+
+      const act = document.createElement('div');
+      act.className = 'act';
+      act.textContent = p.allin && !p.folded ? 'ALL-IN' : (p.lastAction || '');
+      d.appendChild(act);
+
+      if (p.bet > 0){
+        const bc = document.createElement('div');
+        bc.className = 'betchip';
+        bc.textContent = '$' + p.bet;
+        // chip floats toward table center
+        bc.style.left = '50%';
+        bc.style.transform = 'translateX(-50%)';
+        if (pos.y < 50) bc.style.bottom = '-20px';
+        else bc.style.top = p.isHuman ? '-20px' : '-18px';
+        d.appendChild(bc);
+      }
+      if (p.winAmt > 0){
+        const w = document.createElement('div');
+        w.className = 'winamt';
+        w.textContent = '+$' + p.winAmt;
+        d.appendChild(w);
+      }
+      e.seats.appendChild(d);
+    });
+  },
+
+  log(msg){
+    UI.els.log.textContent = msg;
+    UI.els.log.style.opacity = 1;
+    clearTimeout(UI.logTimer);
+    UI.logTimer = setTimeout(() => { UI.els.log.style.opacity = 0.45; }, 2600);
   },
 
   toast(m){
     const t = UI.els.toast;
-    if (!t) return;
     t.textContent = m;
     t.classList.remove('hidden');
     t.style.opacity = 1;
@@ -66,27 +210,17 @@ const UI = {
     UI.toastTimer = setTimeout(() => {
       t.style.opacity = 0;
       setTimeout(() => t.classList.add('hidden'), 300);
-    }, 2800);
+    }, 2600);
   },
 
-  hud(){
-    const s = G.state;
-    if (!s) return;
-    UI.els.money.textContent = U.money(s.money);
-    UI.els.money.classList.toggle('neg', s.money < 0);
-    UI.els.date.textContent = Game.dateStr();
-  },
-
+  // ---- panels ----
   openPanel(title){
-    UI.els.title.textContent = title;
+    UI.els.panelTitle.textContent = title;
     UI.els.panel.classList.remove('hidden');
-    UI.els.body.innerHTML = '';
-    return UI.els.body;
+    UI.els.panelBody.innerHTML = '';
+    return UI.els.panelBody;
   },
-  closePanel(){
-    UI.els.panel.classList.add('hidden');
-    G.selected = null;
-  },
+  closePanel(){ UI.els.panel.classList.add('hidden'); },
   row(html){
     const d = document.createElement('div');
     d.className = 'row';
@@ -94,315 +228,36 @@ const UI = {
     return d;
   },
 
-  previewBanner(plan){
-    if (G.editLineId) return;
-    UI.els.banner.classList.remove('hidden');
-    UI.els.banner.textContent = plan.kind === 'doze'
-      ? 'Demolish — ' + U.money(plan.cost)
-      : 'Cost: ' + U.money(plan.cost) + (plan.ok ? '' : ' — blocked!');
-  },
-  hidePreviewBanner(){
-    if (G.editLineId) return;
-    UI.els.banner.classList.add('hidden');
-  },
-
-  // ---------- info panels ----------
-
-  showStation(id){
-    const st = Game.station(id);
-    if (!st) return;
-    G.selected = { k: 'station', id };
-    const def = D.STATION_TYPES[st.type];
-    const b = UI.openPanel(def.icon + ' ' + st.name);
-    b.appendChild(UI.row('<div class="grow">' + def.name + '<div class="sub">Coverage radius ' + def.r + ' tiles</div></div>'));
-    const cargo = Object.entries(st.cargo).filter(([, n]) => n > 0);
-    b.appendChild(UI.row('<div class="grow">Waiting</div><div>' +
-      (cargo.length ? cargo.map(([t, n]) => D.CARGOS[t].icon + ' ' + Math.floor(n)).join('&nbsp; ') : '—') + '</div>'));
-    const acc = st._accepts ? [...st._accepts] : [];
-    b.appendChild(UI.row('<div class="grow">Accepts</div><div>' +
-      (acc.length ? acc.map(t => D.CARGOS[t].icon).join(' ') : 'nothing in range') + '</div>'));
-    const lines = G.state.lines.filter(l => l.stops.includes(id));
-    for (const l of lines){
-      const r = UI.row('<span class="chip" style="background:' + l.color + '"></span><div class="grow">' + l.name + '</div><button class="btn gray">View</button>');
-      r.querySelector('button').onclick = () => UI.showLine(l.id);
-      b.appendChild(r);
-    }
-    if (!lines.length) b.appendChild(UI.row('<div class="sub grow">No lines stop here yet — add it to a line in the Lines panel.</div>'));
-  },
-
-  showTown(id){
-    const tw = Game.town(id);
-    if (!tw) return;
-    G.selected = { k: 'town', id };
-    const b = UI.openPanel('🏘️ ' + tw.name);
-    b.appendChild(UI.row('<div class="grow">Population</div><b>' + tw.pop + '</b>'));
-    b.appendChild(UI.row('<div class="grow">Demands</div><div>🧍 ' + D.TOWN_ACCEPTS.map(t => D.CARGOS[t].icon).join(' ') + '</div>'));
-    const del = Object.entries(tw.delivered);
-    b.appendChild(UI.row('<div class="grow">Received this month</div><div>' +
-      (del.length ? del.map(([t, n]) => D.CARGOS[t].icon + ' ' + Math.floor(n)).join('&nbsp; ') : '—') + '</div>'));
-    b.appendChild(UI.row('<div class="grow">Passengers served this month</div><b>' + tw.paxServed + '</b>'));
-    b.appendChild(UI.row('<div class="sub grow">Towns grow faster when supplied with passengers, food, goods and tools.</div>'));
-  },
-
-  showIndustry(id){
-    const ind = Game.industry(id);
-    if (!ind) return;
-    G.selected = { k: 'ind', id };
-    const def = D.INDUSTRIES[ind.type];
-    const b = UI.openPanel(def.icon + ' ' + def.name);
-    if (def.inp){
-      b.appendChild(UI.row('<div class="grow">Needs</div><div>' +
-        def.inp.map(t => D.CARGOS[t].icon + ' ' + Math.floor(ind.stockIn[t] || 0)).join('&nbsp; ') + '</div>'));
-    }
-    b.appendChild(UI.row('<div class="grow">Produces</div><div>' +
-      Object.keys(def.out).map(t => D.CARGOS[t].icon + ' ' + D.CARGOS[t].name + ' (' + Math.floor(ind.stock[t] || 0) + ' stored)').join('&nbsp; ') + '</div>'));
-    const n = ind._st ? ind._st.length : 0;
-    b.appendChild(UI.row('<div class="grow">Shipping via</div><div>' + (n ? n + ' station' + (n > 1 ? 's' : '') : 'no station in range!') + '</div>'));
-    b.appendChild(UI.row('<div class="sub grow">Place a 📦 truck stop or 🚉 rail station within range to ship its output.</div>'));
-  },
-
-  showDepot(id){
-    const dep = Game.depot(id);
-    if (!dep) return;
-    G.selected = { k: 'depot', id };
-    const def = D.DEPOT_TYPES[dep.kind];
-    const b = UI.openPanel(def.icon + ' ' + def.name);
-    const year = Game.year();
-    const models = D.MODELS.filter(m => m.net === dep.kind && m.year <= year);
-    const future = D.MODELS.filter(m => m.net === dep.kind && m.year > year);
-    for (const m of models){
-      const r = UI.row(m.icon + '<div class="grow"><b>' + m.name + '</b><div class="sub">' +
-        (m.cls === 'pax' ? 'Passengers' : 'Freight') + ' · cap ' + m.cap + ' · ' +
-        U.money(m.cost) + ' · ' + U.money(m.run) + '/mo</div></div><button class="btn">Buy</button>');
-      r.querySelector('button').onclick = () => UI.buyFlow(dep, m);
-      b.appendChild(r);
-    }
-    if (future.length){
-      const next = future.reduce((a, m) => (m.year < a.year ? m : a));
-      b.appendChild(UI.row('<div class="sub grow">New models arrive over time — next: ' + next.name + ' in ' + next.year + '.</div>'));
-    }
-  },
-
-  buyFlow(dep, m){
-    const lines = G.state.lines.filter(l => l.stops.length >= 2 && Game.lineNet(l) === dep.kind);
-    if (!lines.length){
-      UI.toast('Create a ' + dep.kind + ' line with 2+ stops first (🧭 Lines panel)');
-      return;
-    }
-    if (lines.length === 1){
-      if (Veh.buy(m.id, dep.id, lines[0].id)) UI.showDepot(dep.id);
-      return;
-    }
-    const b = UI.openPanel('Assign ' + m.name + ' to…');
-    for (const l of lines){
-      const r = UI.row('<span class="chip" style="background:' + l.color + '"></span><div class="grow">' + l.name +
-        '<div class="sub">' + l.stops.length + ' stops</div></div><button class="btn">Choose</button>');
-      r.querySelector('button').onclick = () => {
-        if (Veh.buy(m.id, dep.id, l.id)) UI.showDepot(dep.id);
-      };
-      b.appendChild(r);
-    }
-  },
-
-  showVehicle(id){
-    const v = G.state.vehicles.find(q => q.id === id);
-    if (!v) return;
-    G.selected = { k: 'vehicle', id };
-    const m = Veh.model(v);
-    const l = Game.line(v.lineId);
-    const b = UI.openPanel(m.icon + ' ' + m.name);
-    let status = 'No line assigned';
-    if (l && l.stops.length){
-      const st = Game.station(l.stops[v.stopIdx % l.stops.length]);
-      status = st ? 'Heading to ' + st.name : 'Waiting';
-      if (!v._path && v.wait <= 0) status += ' (finding route…)';
-    }
-    b.appendChild(UI.row('<div class="grow">Status</div><div class="sub">' + status + '</div>'));
-    const sums = {};
-    for (const c of v.cargo) sums[c.t] = (sums[c.t] || 0) + c.n;
-    const cs = Object.entries(sums);
-    b.appendChild(UI.row('<div class="grow">On board (' + Object.values(sums).reduce((a, n) => a + n, 0) + '/' + m.cap + ')</div><div>' +
-      (cs.length ? cs.map(([t, n]) => D.CARGOS[t].icon + ' ' + n).join('&nbsp; ') : 'empty') + '</div>'));
-    if (l){
-      const r = UI.row('<span class="chip" style="background:' + l.color + '"></span><div class="grow">' + l.name + '</div><button class="btn gray">View line</button>');
-      r.querySelector('button').onclick = () => UI.showLine(l.id);
-      b.appendChild(r);
-    }
-    const r2 = UI.row('<div class="grow sub">Running cost ' + U.money(m.run) + '/mo</div><button class="btn red">Sell (' + U.money(m.cost * 0.5) + ')</button>');
-    r2.querySelector('button').onclick = () => { Veh.sell(v); UI.closePanel(); };
-    b.appendChild(r2);
-  },
-
-  // ---------- lines ----------
-
-  showLines(){
-    const b = UI.openPanel('🧭 Lines');
-    for (const l of G.state.lines){
-      const nv = G.state.vehicles.filter(v => v.lineId === l.id).length;
-      const r = UI.row('<span class="chip" style="background:' + l.color + '"></span><div class="grow">' + l.name +
-        '<div class="sub">' + l.stops.length + ' stops · ' + nv + ' vehicle' + (nv === 1 ? '' : 's') + '</div></div><button class="btn gray">View</button>');
-      r.querySelector('button').onclick = () => UI.showLine(l.id);
-      b.appendChild(r);
-    }
-    if (!G.state.lines.length){
-      b.appendChild(UI.row('<div class="sub grow">No lines yet. A line is a loop of stations that vehicles serve.</div>'));
-    }
-    const r = UI.row('<button class="btn green" style="width:100%">＋ New Line</button>');
-    r.querySelector('button').onclick = () => UI.newLine();
-    b.appendChild(r);
-  },
-
-  newLine(){
-    const s = G.state;
-    const l = {
-      id: Game.nid(),
-      name: 'Line ' + (s.lines.length + 1),
-      color: D.LINE_COLORS[s.lines.length % D.LINE_COLORS.length],
-      stops: [],
-    };
-    s.lines.push(l);
-    UI.editStops(l.id);
-  },
-
-  editStops(id){
-    const l = Game.line(id);
-    if (!l) return;
-    G.editLineId = id;
-    UI.setTool('select');
-    UI.els.panel.classList.add('hidden');
-    UI.els.banner.classList.remove('hidden');
-    UI.els.banner.innerHTML = '<span>' + l.name + ': tap stations to add stops (<b id="bnN">' + l.stops.length + '</b>)</span>' +
-      '<button class="btn gray" id="bnU">Undo</button><button class="btn green" id="bnD">Done</button>';
-    document.getElementById('bnU').onclick = () => {
-      l.stops.pop();
-      l._pc = null;
-      document.getElementById('bnN').textContent = l.stops.length;
-    };
-    document.getElementById('bnD').onclick = () => {
-      G.editLineId = null;
-      UI.els.banner.classList.add('hidden');
-      if (l.stops.length < 2) UI.toast('A line needs at least 2 stops to run vehicles');
-      UI.showLine(id);
-    };
-  },
-
-  addStop(sid){
-    const l = Game.line(G.editLineId);
-    if (!l) return;
-    const st = Game.station(sid);
-    if (!st) return;
-    if (l.stops.length){
-      const net = Game.lineNet(l);
-      const n2 = D.STATION_TYPES[st.type].net;
-      if (net && net !== n2){
-        UI.toast('This line uses ' + (net === 'road' ? 'road stops' : 'rail stations') + ' only');
-        return;
-      }
-      if (l.stops[l.stops.length - 1] === sid){
-        UI.toast('That is already the previous stop');
-        return;
-      }
-    }
-    l.stops.push(sid);
-    l._pc = null;
-    const n = document.getElementById('bnN');
-    if (n) n.textContent = l.stops.length;
-    UI.toast('Stop ' + l.stops.length + ': ' + st.name);
-  },
-
-  showLine(id){
-    const l = Game.line(id);
-    if (!l) return;
-    G.selected = { k: 'line', id };
-    const b = UI.openPanel('🧭 ' + l.name);
-    const net = Game.lineNet(l);
-    b.appendChild(UI.row('<span class="chip" style="background:' + l.color + '"></span><div class="grow sub">' +
-      (net ? (net === 'road' ? 'Road line' : 'Rail line') : 'Empty line') + ' · vehicles loop through the stops in order</div>'));
-    l.stops.forEach((sid, i) => {
-      const st = Game.station(sid);
-      const r = UI.row('<div class="grow">' + (i + 1) + '. ' + (st ? st.name : '(removed)') + '</div><button class="btn gray">✕</button>');
-      r.querySelector('button').onclick = () => {
-        l.stops.splice(i, 1);
-        l._pc = null;
-        UI.showLine(id);
-      };
-      b.appendChild(r);
-    });
-    const r2 = UI.row('<button class="btn green">＋ Add stops</button><div class="grow"></div><button class="btn red">Delete line</button>');
-    const [add, del] = r2.querySelectorAll('button');
-    add.onclick = () => UI.editStops(id);
-    del.onclick = () => {
-      if (del.dataset.armed){
-        for (const v of [...G.state.vehicles]) if (v.lineId === id) Veh.sell(v);
-        G.state.lines = G.state.lines.filter(q => q.id !== id);
-        G.selected = null;
-        UI.showLines();
-      } else {
-        del.dataset.armed = '1';
-        del.textContent = 'Tap to confirm';
-      }
-    };
-    b.appendChild(r2);
-    const vs = G.state.vehicles.filter(v => v.lineId === id);
-    for (const v of vs){
-      const m = Veh.model(v);
-      const load = v.cargo.reduce((a, c) => a + c.n, 0);
-      const r = UI.row(m.icon + '<div class="grow">' + m.name + '<div class="sub">' + load + '/' + m.cap + ' loaded</div></div><button class="btn gray">View</button>');
-      r.querySelector('button').onclick = () => UI.showVehicle(v.id);
-      b.appendChild(r);
-    }
-    if (!vs.length && l.stops.length >= 2){
-      b.appendChild(UI.row('<div class="sub grow">No vehicles yet — build a ' +
-        (net === 'rail' ? '🚧 rail' : '🛻 road') + ' depot connected to this network and buy one there.</div>'));
-    }
-  },
-
-  // ---------- finance / menu / help ----------
-
-  showFinance(){
-    const s = G.state;
-    const b = UI.openPanel('💰 Finances');
-    b.appendChild(UI.row('<div class="grow"><b>Balance</b></div><b style="color:' + (s.money < 0 ? '#f87171' : '#4ade80') + '">' + U.money(s.money) + '</b>'));
-    const section = (label, st) => {
-      b.appendChild(UI.row('<div class="grow"><b>' + label + '</b></div>'));
-      let inc = 0;
-      for (const t in st.inc){
-        inc += st.inc[t];
-        b.appendChild(UI.row('<div class="grow sub">' + D.CARGOS[t].icon + ' ' + D.CARGOS[t].name + '</div><div style="color:#4ade80">+' + U.money(st.inc[t]) + '</div>'));
-      }
-      if (!inc) b.appendChild(UI.row('<div class="grow sub">No income yet</div>'));
-      b.appendChild(UI.row('<div class="grow sub">Vehicle running costs</div><div style="color:#f87171">-' + U.money(st.run) + '</div>'));
-      b.appendChild(UI.row('<div class="grow sub">Construction & vehicles</div><div style="color:#f87171">-' + U.money(st.build) + '</div>'));
-      const net = inc - st.run - st.build;
-      b.appendChild(UI.row('<div class="grow sub"><b>Net</b></div><b style="color:' + (net < 0 ? '#f87171' : '#4ade80') + '">' + U.money(net) + '</b>'));
-    };
-    section('This month', s.stats.m);
-    if (s.stats.last) section('Last month', s.stats.last);
-    b.appendChild(UI.row('<div class="grow sub">Fleet size</div><div>' + s.vehicles.length + ' vehicles</div>'));
-  },
-
   showMenu(){
-    const b = UI.openPanel('☰ Menu');
+    const b = UI.openPanel('☰ Tiny Poker');
+    const st = Save.data.stats;
+    b.appendChild(UI.row('<div class="grow">Bankroll</div><b style="color:#86efac">$' + Engine.human().stack + '</b>'));
+    b.appendChild(UI.row('<div class="grow">Hands played</div><div>' + st.hands + '</div>'));
+    b.appendChild(UI.row('<div class="grow">Hands won</div><div>' + st.wins + '</div>'));
+    b.appendChild(UI.row('<div class="grow">Biggest pot won</div><div>$' + st.biggest + '</div>'));
     const mk = (label, cls, fn) => {
       const r = UI.row('<button class="btn ' + cls + '" style="width:100%">' + label + '</button>');
       r.querySelector('button').onclick = fn;
       b.appendChild(r);
       return r.querySelector('button');
     };
-    mk('💾 Save game', 'gray', () => { Save.save(); UI.toast('Game saved'); });
     mk('❓ How to play', 'gray', () => UI.showHelp());
-    const nb = mk('🌍 New game (random map)', 'red', () => {
+    const nb = mk('🔄 New table (reset all stacks)', 'red', () => {
       if (nb.dataset.armed){
-        Game.newGame((Math.random() * 1e9) | 0);
+        Save.data.bank = Engine.cfg.STACK;
         Save.save();
+        Engine.init(Engine.cfg.STACK);
+        Engine.start();
         UI.closePanel();
-        UI.toast('New world generated — good luck!');
+        UI.toast('Fresh table — good luck!');
       } else {
         nb.dataset.armed = '1';
-        nb.textContent = 'Tap to confirm — current game is lost';
+        nb.textContent = 'Tap to confirm';
       }
     });
-    b.appendChild(UI.row('<div class="sub grow">Tiny Transport — autosaves every 30s in your browser.</div>'));
+    const r = UI.row('<button class="btn gray" style="width:100%">🚆 Play Tiny Transport (our other game)</button>');
+    r.querySelector('button').onclick = () => { location.href = 'transport/'; };
+    b.appendChild(r);
   },
 
   showHelp(){
@@ -410,16 +265,12 @@ const UI = {
     const d = document.createElement('div');
     d.className = 'help';
     d.innerHTML =
-      '<p><b>Goal:</b> build a profitable transport empire — move passengers and cargo, grow towns, unlock better vehicles over the years.</p>' +
-      '<p><b>1.</b> Place stations: 🚏 bus stops near houses, 📦 truck stops near industries and towns, 🚉 rail stations for both. Each covers a radius (dashed circle).</p>' +
-      '<p><b>2.</b> Connect stations with 🛣️ roads or 🛤️ rails — drag on the map to build. Building over water makes bridges (6×), hills cost 3×.</p>' +
-      '<p><b>3.</b> Open 🧭 <b>Lines</b> → New Line, then tap your stations in order and press Done.</p>' +
-      '<p><b>4.</b> Place a 🛻 road depot or 🚧 rail depot touching your network, tap it, and buy a vehicle for the line.</p>' +
-      '<p><b>5.</b> Vehicles loop along the line, load what a later stop accepts, and earn by distance × cargo value.</p>' +
-      '<p><b>Supply chains:</b><br>🌾 Farm → 🥫 Food Plant → towns<br>🌲 Lumber Camp → 🪚 Sawmill → 📦 Goods → towns<br>⛏️ Coal + 🪨 Iron → 🏭 Steel Mill → 🔧 Tool Works → towns<br>🧍 Passengers travel between towns.</p>' +
-      '<p><b>Towns grow</b> when supplied with passengers, food, goods and tools — more houses, more passengers.</p>' +
-      '<p><b>Controls:</b> one finger pans (select tool) · pinch to zoom · with road/rail/demolish tools, one-finger drag builds and two fingers pan · tap anything to inspect it.</p>' +
-      '<p>New vehicle generations unlock in 1975/1980, 2000/2005. Watch your monthly running costs in 💰.</p>';
+      '<p><b>No-Limit Texas Hold\'em</b> against four bots. Blinds are $10/$20 and everyone starts with $2,000. Bust and you get a fresh stack — your bankroll is saved in your browser.</p>' +
+      '<p><b>Each hand:</b> you get 2 hole cards. Five community cards arrive on the flop (3), turn (1) and river (1). The best 5-card hand from your 7 wins.</p>' +
+      '<p><b>Your turn:</b> Fold, Check/Call, or Bet/Raise. The raise panel has a slider plus Min, ½ Pot, Pot and All-in shortcuts.</p>' +
+      '<p><b>Hand ranks</b> (high → low): Royal/Straight Flush, Four of a Kind, Full House, Flush, Straight, Three of a Kind, Two Pair, Pair, High Card.</p>' +
+      '<p><b>The bots</b> have personalities — 🐗 Rocco bluffs a lot, 🐻 Viktor only plays strong cards. Watch their habits.</p>' +
+      '<p>Side pots are handled correctly when someone is all-in — you can only win what you matched.</p>';
     b.appendChild(d);
   },
 };

@@ -1,50 +1,24 @@
 'use strict';
 const Save = {
-  KEY: 'tinytransport-v1',
-
-  save(){
-    try {
-      const s = G.state;
-      if (!s) return;
-      const plain = Object.assign({}, s, {
-        terrain: Array.from(s.terrain),
-        net: Array.from(s.net),
-      });
-      // keys starting with _ are derived caches, rebuilt on load
-      localStorage.setItem(Save.KEY, JSON.stringify(plain, (k, v) => (k && k[0] === '_' ? undefined : v)));
-    } catch (e) {
-      console.warn('save failed', e);
-    }
-  },
+  KEY: 'tinypoker-v1',
+  data: { bank: 2000, stats: { hands: 0, wins: 0, biggest: 0 } },
 
   load(){
     try {
       const raw = localStorage.getItem(Save.KEY);
-      if (!raw) return false;
-      const s = JSON.parse(raw);
-      s.terrain = Uint8Array.from(s.terrain);
-      s.net = Uint8Array.from(s.net);
-      for (const v of s.vehicles){
-        v._path = null; v._dist = 0; v._netVer = -1;
-        v.wait = 0; v.retry = 0;
+      if (raw){
+        const d = JSON.parse(raw);
+        if (typeof d.bank === 'number') Save.data.bank = d.bank;
+        if (d.stats) Save.data.stats = Object.assign(Save.data.stats, d.stats);
+        return true;
       }
-      G.state = s;
-      Game.rebuildOcc();
-      Game.refreshAcceptance();
-      G.netVersion++;
-      const t0 = s.towns[0];
-      if (t0) G.cam = { x: t0.x, y: t0.y, zoom: 1.1 };
-      return true;
-    } catch (e) {
-      console.warn('load failed', e);
-      return false;
-    }
+    } catch (e) { console.warn('load failed', e); }
+    return false;
   },
 
-  initAuto(){
-    setInterval(Save.save, 30000);
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') Save.save();
-    });
+  save(){
+    try {
+      localStorage.setItem(Save.KEY, JSON.stringify(Save.data));
+    } catch (e) { console.warn('save failed', e); }
   },
 };

@@ -6,38 +6,50 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0f172a">
-<title>Tiny Transport</title>
+<meta name="theme-color" content="#0c1220">
+<title>Tiny Poker — No-Limit Hold'em</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<canvas id="game"></canvas>
 
 <div id="topbar">
   <button id="btnMenu">☰</button>
-  <button id="btnRot">⟳</button>
-  <div id="money">$0</div>
-  <div id="date">Jan 1, 1950</div>
-  <div id="speed">
-    <button data-speed="0">⏸</button><button data-speed="1" class="on">▶</button><button data-speed="2">▶▶</button><button data-speed="4">▶▶▶</button>
+  <div id="blinds">Blinds 10/20</div>
+  <div id="handNo"></div>
+</div>
+
+<div id="table">
+  <div id="felt"></div>
+  <div id="seats"></div>
+  <div id="center">
+    <div id="pot"></div>
+    <div id="board"></div>
+    <div id="log"></div>
   </div>
 </div>
 
-<div id="toolbar">
-  <button class="tool on" data-tool="select">👆<span>Select</span></button>
-  <button class="tool" data-tool="road">🛣️<span>Road</span></button>
-  <button class="tool" data-tool="rail">🛤️<span>Rail</span></button>
-  <button class="tool" data-tool="bus">🚏<span>Bus stop</span></button>
-  <button class="tool" data-tool="truck">📦<span>Truck stop</span></button>
-  <button class="tool" data-tool="train">🚉<span>Rail stn</span></button>
-  <button class="tool" data-tool="rdepot">🛻<span>Rd depot</span></button>
-  <button class="tool" data-tool="tdepot">🚧<span>Rl depot</span></button>
-  <button class="tool" data-tool="bulldoze">🧨<span>Demolish</span></button>
-  <button class="tool" data-panel="lines">🧭<span>Lines</span></button>
-  <button class="tool" data-panel="finance">💰<span>Money</span></button>
+<div id="actions" class="hidden">
+  <div id="actInfo"></div>
+  <div id="actRow">
+    <button id="btnFold" class="abtn fold">Fold</button>
+    <button id="btnCall" class="abtn call">Check</button>
+    <button id="btnRaise" class="abtn raise">Raise</button>
+  </div>
+  <div id="raisePanel" class="hidden">
+    <div id="raiseAmt"></div>
+    <input type="range" id="raiseSlider" min="0" max="100" value="0">
+    <div id="raiseQuick">
+      <button data-q="min">Min</button>
+      <button data-q="half">½ Pot</button>
+      <button data-q="pot">Pot</button>
+      <button data-q="allin">All-in</button>
+    </div>
+    <div id="raiseConfirmRow">
+      <button id="btnRaiseCancel" class="abtn gray">Back</button>
+      <button id="btnRaiseGo" class="abtn raise">Raise</button>
+    </div>
+  </div>
 </div>
-
-<div id="banner" class="hidden"></div>
 
 <div id="panel" class="hidden">
   <div id="panelHead"><div id="panelTitle"></div><button id="panelClose">✕</button></div>
@@ -46,18 +58,11 @@
 
 <div id="toast" class="hidden"></div>
 
-<script src="js/lib/three.min.js"></script>
-<script src="js/util.js"></script>
-<script src="js/data.js"></script>
-<script src="js/path.js"></script>
-<script src="js/game.js"></script>
-<script src="js/map.js"></script>
-<script src="js/build.js"></script>
-<script src="js/vehicles.js"></script>
-<script src="js/render.js"></script>
-<script src="js/input.js"></script>
-<script src="js/ui.js"></script>
+<script src="js/cards.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/engine.js"></script>
 <script src="js/save.js"></script>
+<script src="js/ui.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

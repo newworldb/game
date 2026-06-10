@@ -1,30 +1,29 @@
 'use strict';
 (function(){
-  let last = 0;
-
-  function frame(t){
-    const dt = Math.min(0.1, (t - last) / 1000) || 0;
-    last = t;
-    Game.tick(dt, G.speed);
-    Render.draw();
-    UI.hud();
-    requestAnimationFrame(frame);
-  }
-
   window.addEventListener('load', () => {
-    try {
-      Render.init();
-    } catch (e) {
-      console.error(e);
-      document.body.innerHTML = '<p style="padding:40px;text-align:center">This game needs WebGL — please use a modern browser.</p>';
-      return;
-    }
+    const first = !Save.load();
     UI.init();
-    const loaded = Save.load();
-    if (!loaded) Game.newGame((Math.random() * 1e9) | 0);
-    Input.init();
-    Save.initAuto();
-    requestAnimationFrame(frame);
-    if (!loaded) UI.showHelp();
+    Engine.init(Save.data.bank);
+    Engine.hooks.update = UI.update;
+    Engine.hooks.log = m => UI.log(m);
+    Engine.hooks.human = ctx => UI.human(ctx);
+    Engine.hooks.handStart = () => {
+      Save.data.stats.hands++;
+    };
+    Engine.hooks.handEnd = () => {
+      const hero = Engine.human();
+      if (hero.winAmt > 0){
+        Save.data.stats.wins++;
+        if (hero.winAmt > Save.data.stats.biggest) Save.data.stats.biggest = hero.winAmt;
+      }
+      Save.data.bank = hero.stack;
+      Save.save();
+    };
+    window.addEventListener('resize', () => UI.update());
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') Save.save();
+    });
+    Engine.start();
+    if (first) UI.showHelp();
   });
 })();
