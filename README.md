@@ -36,8 +36,13 @@ Then open `http://localhost:8000` (or your machine's LAN IP from a phone).
 - **Economy** — monthly running costs, finance panel with income per cargo,
   construction costs and net result.
 - **3D world** — WebGL isometric-style view with rotatable camera (⟳ button,
-  45° steps), terrain with hills, coast cliffs and bridges, instanced trees
-  and houses, 3D vehicles and colored 3D line ribbons.
+  45° steps), real-time shadows, terrain with hills, coast cliffs, beaches and
+  bridges, animated water and drifting clouds, mixed forests with tree trunks,
+  windowed houses, factories with smoking chimneys, detailed roads (dashed
+  centerlines) and twin-rail tracks with ties, and mini vehicle models
+  (buses with window bands, trucks with cabs, locomotives with wagons).
+- **People** — pedestrians wander every town (more as population grows) and
+  waiting passengers visibly gather at stations based on real queue sizes.
 - **Mobile controls** — pan, pinch-zoom, tap to inspect, drag-to-build with
   two-finger pan, large touch-friendly UI.
 - **Persistence** — autosaves to `localStorage` every 30 s and on tab hide.
