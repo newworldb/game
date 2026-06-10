@@ -31,7 +31,8 @@ button{font-family:inherit;cursor:pointer;}
 /* ---- cards ---- */
 .card{width:50px;height:72px;border-radius:7px;background:#fdfdf8;position:relative;
   box-shadow:0 2px 6px rgba(0,0,0,.45);border:1px solid #cbd5e1;
-  display:flex;align-items:center;justify-content:center;animation:dealin .25s ease-out;}
+  display:flex;align-items:center;justify-content:center;}
+.card.deal{animation:dealin .25s ease-out;}
 .card .cr{position:absolute;top:3px;left:5px;font-size:15px;font-weight:800;line-height:1;}
 .card .cs{font-size:26px;margin-top:6px;}
 .card.red{color:#dc2626;}

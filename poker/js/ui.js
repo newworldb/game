@@ -141,13 +141,27 @@ const UI = {
     return best;
   },
 
-  cardEl(c, sm){
+  _seen: new Set(),
+  _seenHand: -1,
+  // deal animation plays only the first time a given card slot appears
+  dealClass(key){
+    if (Engine.handNo !== UI._seenHand){
+      UI._seenHand = Engine.handNo;
+      UI._seen.clear();
+    }
+    if (UI._seen.has(key)) return '';
+    UI._seen.add(key);
+    return ' deal';
+  },
+
+  cardEl(c, sm, key){
     const d = document.createElement('div');
+    const anim = key ? UI.dealClass(key) : '';
     if (c === null){
-      d.className = 'card back' + (sm ? ' sm' : '');
+      d.className = 'card back' + (sm ? ' sm' : '') + anim;
       return d;
     }
-    d.className = 'card ' + (Cards.isRed(c) ? 'red' : 'black') + (sm ? ' sm' : '');
+    d.className = 'card ' + (Cards.isRed(c) ? 'red' : 'black') + (sm ? ' sm' : '') + anim;
     d.innerHTML = '<span class="cr">' + Cards.rankStr(c) + '</span><span class="cs">' + Cards.suitStr(c) + '</span>';
     return d;
   },
@@ -167,7 +181,7 @@ const UI = {
     const pot = Engine.pot();
     e.pot.textContent = pot > 0 ? 'Pot  $' + pot : '';
     e.board.innerHTML = '';
-    for (const c of Engine.board) e.board.appendChild(UI.cardEl(c));
+    Engine.board.forEach((c, bi) => e.board.appendChild(UI.cardEl(c, false, 'b' + bi)));
     // seats
     e.seats.innerHTML = '';
     const tw = e.seats.parentElement.clientWidth, th = e.seats.parentElement.clientHeight;
@@ -183,7 +197,7 @@ const UI = {
       cards.className = 'cards';
       if (p.cards.length && !p.folded){
         const show = p.isHuman || p.revealed || Save.data.xray || Engine.mode === 'super';
-        for (const c of p.cards) cards.appendChild(UI.cardEl(show ? c : null, !p.isHuman));
+        p.cards.forEach((c, ci) => cards.appendChild(UI.cardEl(show ? c : null, !p.isHuman, 'h' + p.i + ':' + ci)));
       }
       if (p.isHuman) d.appendChild(cards);
 
