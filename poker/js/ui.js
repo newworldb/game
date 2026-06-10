@@ -78,9 +78,9 @@ const UI = {
     e.btnRaise.textContent = ctx.toCall > 0 ? 'Raise' : 'Bet';
     e.btnRaise.style.display = ctx.canRaise ? '' : 'none';
     e.actInfo.textContent = 'Pot $' + ctx.pot + (ctx.toCall > 0 ? ' · $' + ctx.toCall + ' to call' : '');
-    if (Engine.mode === 'super'){
-      const bar = document.getElementById('timerBar');
-      const fill = document.getElementById('timerFill');
+    const bar = document.getElementById('timerBar');
+    const fill = document.getElementById('timerFill');
+    if (Engine.mode === 'super' && bar && fill){
       bar.classList.remove('hidden');
       fill.style.transition = 'none';
       fill.style.width = '100%';
@@ -98,7 +98,8 @@ const UI = {
   act(a){
     clearTimeout(UI._timerTO);
     UI._timerTO = null;
-    document.getElementById('timerBar').classList.add('hidden');
+    const tb = document.getElementById('timerBar');
+    if (tb) tb.classList.add('hidden');
     const e = UI.els;
     e.actions.classList.add('hidden');
     const r = UI._res;
