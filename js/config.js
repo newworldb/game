@@ -8,6 +8,8 @@ const AFF = {
   t12go_z: '',          // 12Go Asia partner ?z= id
   trip_allianceid: '',  // Trip.com Allianceid
   trip_sid: '',         // Trip.com SID
+  eatigo_ref: '',       // Eatigo via involve.asia — your tracking ref
+  hungryhub_ref: '',    // Hungry Hub partner ref
 };
 
 const Links = {
@@ -56,5 +58,35 @@ const Links = {
     if (AFF.trip_sid) q.push('SID=' + AFF.trip_sid);
     if (q.length) u += '?' + q.join('&');
     return u;
+  },
+
+  // restaurant deals — Eatigo covers BKK / Pattaya / Phuket / Chiang Mai
+  EATIGO_CITIES: { bangkok: 'bangkok', pattaya: 'pattaya', phuket: 'phuket', chiangmai: 'chiang-mai' },
+  foodEatigo(trip){
+    const city = Links.EATIGO_CITIES[trip.dest] || 'bangkok';
+    let u = 'https://eatigo.com/th/' + city + '/en';
+    if (AFF.eatigo_ref) u += '?ref=' + AFF.eatigo_ref;
+    return u;
+  },
+  foodHungryHub(){
+    let u = 'https://web.hungryhub.com/';
+    if (AFF.hungryhub_ref) u += '?ref=' + AFF.hungryhub_ref;
+    return u;
+  },
+  foodKlook(trip){
+    const d = Core.dest(trip);
+    let u = 'https://www.klook.com/search/result/?query=' + Links.enc(d.en + ' food');
+    if (AFF.klook_aid) u += '&aid=' + AFF.klook_aid;
+    return u;
+  },
+
+  // best affiliate for a budget category, with trip context
+  forCategory(cat, trip){
+    if (cat === 'accom') return Links.hotelAgoda(trip);
+    if (cat === 'flights') return Links.flights();
+    if (cat === 'transport') return Links.ground(trip);
+    if (cat === 'act') return Links.activities(trip);
+    if (cat === 'food') return Links.foodEatigo(trip);
+    return null;
   },
 };

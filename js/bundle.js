@@ -10,6 +10,8 @@ const AFF = {
   t12go_z: '',          // 12Go Asia partner ?z= id
   trip_allianceid: '',  // Trip.com Allianceid
   trip_sid: '',         // Trip.com SID
+  eatigo_ref: '',       // Eatigo via involve.asia — your tracking ref
+  hungryhub_ref: '',    // Hungry Hub partner ref
 };
 
 const Links = {
@@ -58,6 +60,36 @@ const Links = {
     if (AFF.trip_sid) q.push('SID=' + AFF.trip_sid);
     if (q.length) u += '?' + q.join('&');
     return u;
+  },
+
+  // restaurant deals — Eatigo covers BKK / Pattaya / Phuket / Chiang Mai
+  EATIGO_CITIES: { bangkok: 'bangkok', pattaya: 'pattaya', phuket: 'phuket', chiangmai: 'chiang-mai' },
+  foodEatigo(trip){
+    const city = Links.EATIGO_CITIES[trip.dest] || 'bangkok';
+    let u = 'https://eatigo.com/th/' + city + '/en';
+    if (AFF.eatigo_ref) u += '?ref=' + AFF.eatigo_ref;
+    return u;
+  },
+  foodHungryHub(){
+    let u = 'https://web.hungryhub.com/';
+    if (AFF.hungryhub_ref) u += '?ref=' + AFF.hungryhub_ref;
+    return u;
+  },
+  foodKlook(trip){
+    const d = Core.dest(trip);
+    let u = 'https://www.klook.com/search/result/?query=' + Links.enc(d.en + ' food');
+    if (AFF.klook_aid) u += '&aid=' + AFF.klook_aid;
+    return u;
+  },
+
+  // best affiliate for a budget category, with trip context
+  forCategory(cat, trip){
+    if (cat === 'accom') return Links.hotelAgoda(trip);
+    if (cat === 'flights') return Links.flights();
+    if (cat === 'transport') return Links.ground(trip);
+    if (cat === 'act') return Links.activities(trip);
+    if (cat === 'food') return Links.foodEatigo(trip);
+    return null;
   },
 };
 
@@ -133,6 +165,14 @@ const I18N = {
     noFit: 'Budget too small for these settings — add more or switch style.',
     pickPlan: 'Pick this plan',
     left: 'left over',
+    deal: 'Best deal',
+    bestPicks: 'Best picks for your plan',
+    bestBadge: 'TOP PICK',
+    bookFood: 'Restaurant deals (Eatigo)',
+    bookFoodDesc: 'Up to 50% off when you book a table ahead',
+    bookFood2: 'Restaurant packages (Hungry Hub)',
+    bookFood2Desc: 'Set menus & all-you-can-eat at fixed net prices',
+    sortedNote: 'Sorted by where your money goes in this plan',
   },
   th: {
     tagline: 'วางแผนงบเที่ยวไทยใน 30 วินาที',
@@ -164,6 +204,14 @@ const I18N = {
     noFit: 'งบยังไม่พอสำหรับเงื่อนไขนี้ — ลองเพิ่มงบหรือเปลี่ยนสไตล์ดูนะ',
     pickPlan: 'เลือกแผนนี้',
     left: 'เหลือ',
+    deal: 'ดีลเด็ด',
+    bestPicks: 'ดีลที่ดีที่สุดสำหรับแผนนี้',
+    bestBadge: 'แนะนำ',
+    bookFood: 'จองร้านอาหารลดสูงสุด 50% (Eatigo)',
+    bookFoodDesc: 'จองโต๊ะล่วงหน้า รับส่วนลดทันที',
+    bookFood2: 'แพ็กเกจร้านอาหาร (Hungry Hub)',
+    bookFood2Desc: 'เซ็ตเมนู / บุฟเฟ่ต์ ราคาเหมาจ่ายชัดเจน',
+    sortedNote: 'เรียงตามหมวดที่ใช้เงินเยอะสุดในแผนของคุณ',
   },
 };
 
@@ -582,11 +630,14 @@ const App = {
       if (!amt && c.id === 'flights') continue;
       const used = sp[c.id] || 0;
       const pct = amt > 0 ? Math.min(100, Math.round(used / amt * 100)) : (used > 0 ? 100 : 0);
+      const dealUrl = Links.forCategory(c.id, trip);
       const r = App.el(
         '<div class="catrow"><div class="cr-top"><span>' + c.emoji + ' ' + App.t(c.id) + '</span>' +
         '<input class="amt" inputmode="numeric" value="' + amt + '"></div>' +
         '<div class="bar"><div class="fill' + (used > amt ? ' over' : '') + '" style="width:' + pct + '%"></div></div>' +
-        '<div class="sub">' + Core.fmt(used) + ' / ' + Core.fmt(amt) + '</div></div>');
+        '<div class="cr-foot"><span class="sub">' + Core.fmt(used) + ' / ' + Core.fmt(amt) + '</span>' +
+        (dealUrl ? '<a class="dealb" target="_blank" rel="noopener sponsored" href="' + dealUrl + '">🔥 ' + App.t('deal') + ' ↗</a>' : '') +
+        '</div></div>');
       const inp = r.querySelector('.amt');
       inp.onchange = () => {
         trip.budget[c.id] = Math.max(0, parseInt(inp.value.replace(/[^0-9]/g, ''), 10) || 0);
@@ -645,19 +696,44 @@ const App = {
 
   tabBook(trip){
     const w = App.el('<div></div>');
-    w.appendChild(App.el('<h2 class="sect">' + App.t('bookTitle') + '</h2>'));
-    const card = (emoji, title, desc, url, cls) => {
-      const c = App.el('<a class="bookcard ' + cls + '" target="_blank" rel="noopener sponsored" href="' + url + '">' +
-        '<span class="bk-e">' + emoji + '</span><div class="grow"><b>' + title + '</b><div class="sub">' + desc + '</div></div>' +
-        '<span class="bk-go">' + App.t('open') + ' ↗</span></a>');
-      return c;
-    };
-    w.appendChild(card('🏨', App.t('bookHotelA'), App.t('bookHotelDesc'), Links.hotelAgoda(trip), 'agoda'));
-    w.appendChild(card('🛏️', App.t('bookHotelB'), App.t('bookHotelDesc'), Links.hotelBooking(trip), 'booking'));
-    if (Core.dest(trip).flight || trip.inclFlights)
-      w.appendChild(card('✈️', App.t('bookFlights'), App.t('bookFlightsDesc'), Links.flights(), 'flights'));
-    w.appendChild(card('🚌', App.t('bookGround'), App.t('bookGroundDesc'), Links.ground(trip), 'ground'));
-    w.appendChild(card('🎟️', App.t('bookAct'), App.t('bookActDesc'), Links.activities(trip), 'klook'));
+    w.appendChild(App.el('<h2 class="sect">' + App.t('bestPicks') + '</h2>'));
+    w.appendChild(App.el('<div class="sub" style="margin:-4px 2px 10px">' + App.t('sortedNote') + '</div>'));
+
+    // one offer group per category, ranked by this trip's budget weight
+    const groups = [
+      { cat: 'accom', cards: [
+        ['🏨', App.t('bookHotelA'), App.t('bookHotelDesc'), Links.hotelAgoda(trip), 'agoda'],
+        ['🛏️', App.t('bookHotelB'), App.t('bookHotelDesc'), Links.hotelBooking(trip), 'booking'],
+      ] },
+      { cat: 'food', cards: [
+        ['🍜', App.t('bookFood'), App.t('bookFoodDesc'), Links.foodEatigo(trip), 'eatigo'],
+        ['🍱', App.t('bookFood2'), App.t('bookFood2Desc'), Links.foodHungryHub(), 'hungryhub'],
+      ] },
+      { cat: 'act', cards: [
+        ['🎟️', App.t('bookAct'), App.t('bookActDesc'), Links.activities(trip), 'klook'],
+      ] },
+      { cat: 'transport', cards: [
+        ['🚌', App.t('bookGround'), App.t('bookGroundDesc'), Links.ground(trip), 'ground'],
+      ] },
+    ];
+    if (Core.dest(trip).flight || trip.inclFlights){
+      groups.push({ cat: 'flights', cards: [
+        ['✈️', App.t('bookFlights'), App.t('bookFlightsDesc'), Links.flights(), 'flights'],
+      ] });
+    }
+    groups.sort((a, b) => (trip.budget[b.cat] || 0) - (trip.budget[a.cat] || 0));
+
+    groups.forEach((g, gi) => {
+      g.cards.forEach(([emoji, title, desc, url, cls], ci) => {
+        const top = gi === 0 && ci === 0;
+        const c = App.el('<a class="bookcard ' + cls + '" target="_blank" rel="noopener sponsored" href="' + url + '">' +
+          '<span class="bk-e">' + emoji + '</span><div class="grow"><b>' + title + '</b>' +
+          (top ? ' <span class="bestbadge">★ ' + App.t('bestBadge') + '</span>' : '') +
+          '<div class="sub">' + desc + ' · ' + App.t(g.cat) + ' ' + Core.fmt(trip.budget[g.cat] || 0) + '</div></div>' +
+          '<span class="bk-go">' + App.t('open') + ' ↗</span></a>');
+        w.appendChild(c);
+      });
+    });
     w.appendChild(App.el('<div class="disclosure">ⓘ ' + App.t('disclosure') + '</div>'));
     return w;
   },

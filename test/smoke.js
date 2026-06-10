@@ -84,5 +84,19 @@ const withFl = Core.planOptions(20000, 2, 'mid', true).find(o => o.dest === 'chi
 const noFl = Core.planOptions(20000, 2, 'mid', false).find(o => o.dest === 'chiangmai');
 assert(withFl && noFl && withFl.nights <= noFl.nights, 'flights eat into nights');
 
-console.log('BUDGETTRIP SMOKE TEST PASSED —', Object.keys(DESTS).length, 'destinations, estimates, expenses, planner, affiliate links OK');
+// food/restaurant affiliates + category router
+AFF.eatigo_ref = 'EAT123'; AFF.hungryhub_ref = 'HH456'; AFF.klook_aid = '777003';
+const bkk = Core.newTrip({ dest: 'bangkok', style: 'mid', nights: 2, people: 2, start: '', inclFlights: false });
+assert(Links.foodEatigo(bkk).includes('eatigo.com/th/bangkok') && Links.foodEatigo(bkk).includes('ref=EAT123'), 'eatigo bkk link');
+const paiTrip = Core.newTrip({ dest: 'pai', style: 'budget', nights: 2, people: 1, start: '', inclFlights: false });
+assert(Links.foodEatigo(paiTrip).includes('/bangkok'), 'eatigo falls back to bangkok for uncovered cities');
+assert(Links.foodHungryHub().includes('hungryhub') && Links.foodHungryHub().includes('ref=HH456'), 'hungry hub link');
+assert(Links.foodKlook(bkk).includes('food'), 'klook food link');
+assert(Links.forCategory('accom', bkk).includes('agoda'), 'router accom');
+assert(Links.forCategory('food', bkk).includes('eatigo'), 'router food');
+assert(Links.forCategory('transport', bkk).includes('12go'), 'router transport');
+assert(Links.forCategory('act', bkk).includes('klook'), 'router act');
+assert(Links.forCategory('shopping', bkk) === null, 'no affiliate for shopping');
+
+console.log('BUDGETTRIP SMOKE TEST PASSED —', Object.keys(DESTS).length, 'destinations, estimates, expenses, planner, affiliate links (incl. restaurants) OK');
 `, sandbox, { filename: 'budgettrip-test.js' });

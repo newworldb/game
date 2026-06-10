@@ -78,6 +78,11 @@ header{display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 10
 .catrow{background:#fff;border:1px solid #e3e9e4;border-radius:13px;padding:11px 14px;margin-bottom:8px;}
 .cr-top{display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:14px;}
 .amt{width:108px;text-align:right;border:1px solid #e3e9e4;border-radius:9px;padding:7px;font-weight:800;color:#0e7461;background:#fbfdfb;}
+.cr-foot{display:flex;align-items:center;justify-content:space-between;margin-top:2px;}
+.dealb{font-size:12px;font-weight:800;color:#d97b06;text-decoration:none;background:#fdf3e3;border:1px solid #f3ddb5;border-radius:999px;padding:4px 11px;}
+.bestbadge{font-size:10.5px;font-weight:900;color:#fff;background:linear-gradient(135deg,#e8932f,#d97b06);border-radius:999px;padding:2px 8px;margin-left:6px;vertical-align:1px;white-space:nowrap;}
+.bookcard.eatigo{border-left-color:#f0552e;}
+.bookcard.hungryhub{border-left-color:#e23744;}
 .ghostb{display:block;width:100%;background:#fff;border:1.5px dashed #b9c8bd;border-radius:13px;padding:12px;color:#5d6c63;font-weight:700;margin-top:4px;}
 .dangerb{display:block;width:100%;background:none;border:none;color:#c25555;font-weight:700;padding:16px;margin-top:8px;}
 

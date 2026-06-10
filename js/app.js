@@ -285,11 +285,14 @@ const App = {
       if (!amt && c.id === 'flights') continue;
       const used = sp[c.id] || 0;
       const pct = amt > 0 ? Math.min(100, Math.round(used / amt * 100)) : (used > 0 ? 100 : 0);
+      const dealUrl = Links.forCategory(c.id, trip);
       const r = App.el(
         '<div class="catrow"><div class="cr-top"><span>' + c.emoji + ' ' + App.t(c.id) + '</span>' +
         '<input class="amt" inputmode="numeric" value="' + amt + '"></div>' +
         '<div class="bar"><div class="fill' + (used > amt ? ' over' : '') + '" style="width:' + pct + '%"></div></div>' +
-        '<div class="sub">' + Core.fmt(used) + ' / ' + Core.fmt(amt) + '</div></div>');
+        '<div class="cr-foot"><span class="sub">' + Core.fmt(used) + ' / ' + Core.fmt(amt) + '</span>' +
+        (dealUrl ? '<a class="dealb" target="_blank" rel="noopener sponsored" href="' + dealUrl + '">🔥 ' + App.t('deal') + ' ↗</a>' : '') +
+        '</div></div>');
       const inp = r.querySelector('.amt');
       inp.onchange = () => {
         trip.budget[c.id] = Math.max(0, parseInt(inp.value.replace(/[^0-9]/g, ''), 10) || 0);
@@ -348,19 +351,44 @@ const App = {
 
   tabBook(trip){
     const w = App.el('<div></div>');
-    w.appendChild(App.el('<h2 class="sect">' + App.t('bookTitle') + '</h2>'));
-    const card = (emoji, title, desc, url, cls) => {
-      const c = App.el('<a class="bookcard ' + cls + '" target="_blank" rel="noopener sponsored" href="' + url + '">' +
-        '<span class="bk-e">' + emoji + '</span><div class="grow"><b>' + title + '</b><div class="sub">' + desc + '</div></div>' +
-        '<span class="bk-go">' + App.t('open') + ' ↗</span></a>');
-      return c;
-    };
-    w.appendChild(card('🏨', App.t('bookHotelA'), App.t('bookHotelDesc'), Links.hotelAgoda(trip), 'agoda'));
-    w.appendChild(card('🛏️', App.t('bookHotelB'), App.t('bookHotelDesc'), Links.hotelBooking(trip), 'booking'));
-    if (Core.dest(trip).flight || trip.inclFlights)
-      w.appendChild(card('✈️', App.t('bookFlights'), App.t('bookFlightsDesc'), Links.flights(), 'flights'));
-    w.appendChild(card('🚌', App.t('bookGround'), App.t('bookGroundDesc'), Links.ground(trip), 'ground'));
-    w.appendChild(card('🎟️', App.t('bookAct'), App.t('bookActDesc'), Links.activities(trip), 'klook'));
+    w.appendChild(App.el('<h2 class="sect">' + App.t('bestPicks') + '</h2>'));
+    w.appendChild(App.el('<div class="sub" style="margin:-4px 2px 10px">' + App.t('sortedNote') + '</div>'));
+
+    // one offer group per category, ranked by this trip's budget weight
+    const groups = [
+      { cat: 'accom', cards: [
+        ['🏨', App.t('bookHotelA'), App.t('bookHotelDesc'), Links.hotelAgoda(trip), 'agoda'],
+        ['🛏️', App.t('bookHotelB'), App.t('bookHotelDesc'), Links.hotelBooking(trip), 'booking'],
+      ] },
+      { cat: 'food', cards: [
+        ['🍜', App.t('bookFood'), App.t('bookFoodDesc'), Links.foodEatigo(trip), 'eatigo'],
+        ['🍱', App.t('bookFood2'), App.t('bookFood2Desc'), Links.foodHungryHub(), 'hungryhub'],
+      ] },
+      { cat: 'act', cards: [
+        ['🎟️', App.t('bookAct'), App.t('bookActDesc'), Links.activities(trip), 'klook'],
+      ] },
+      { cat: 'transport', cards: [
+        ['🚌', App.t('bookGround'), App.t('bookGroundDesc'), Links.ground(trip), 'ground'],
+      ] },
+    ];
+    if (Core.dest(trip).flight || trip.inclFlights){
+      groups.push({ cat: 'flights', cards: [
+        ['✈️', App.t('bookFlights'), App.t('bookFlightsDesc'), Links.flights(), 'flights'],
+      ] });
+    }
+    groups.sort((a, b) => (trip.budget[b.cat] || 0) - (trip.budget[a.cat] || 0));
+
+    groups.forEach((g, gi) => {
+      g.cards.forEach(([emoji, title, desc, url, cls], ci) => {
+        const top = gi === 0 && ci === 0;
+        const c = App.el('<a class="bookcard ' + cls + '" target="_blank" rel="noopener sponsored" href="' + url + '">' +
+          '<span class="bk-e">' + emoji + '</span><div class="grow"><b>' + title + '</b>' +
+          (top ? ' <span class="bestbadge">★ ' + App.t('bestBadge') + '</span>' : '') +
+          '<div class="sub">' + desc + ' · ' + App.t(g.cat) + ' ' + Core.fmt(trip.budget[g.cat] || 0) + '</div></div>' +
+          '<span class="bk-go">' + App.t('open') + ' ↗</span></a>');
+        w.appendChild(c);
+      });
+    });
     w.appendChild(App.el('<div class="disclosure">ⓘ ' + App.t('disclosure') + '</div>'));
     return w;
   },
