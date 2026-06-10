@@ -20,12 +20,42 @@ const Core = {
   },
 
   dest(trip){ return DESTS[trip.dest] || DESTS.bangkok; },
+
+  // unified destination info for Thai presets and worldwide custom trips
+  destInfo(trip){
+    if (trip.dest === 'custom' && trip.custom){
+      const c = trip.custom;
+      return { key: 'custom', en: c.name, th: c.name, img: c.img || '',
+        flight: c.flight || 0, slug12go: '', countryQ: c.countryQ || '',
+        countryTh: c.countryTh || '', countryEn: c.countryEn || '' };
+    }
+    const d = DESTS[trip.dest] || DESTS.bangkok;
+    const key = DESTS[trip.dest] ? trip.dest : 'bangkok';
+    return { key, en: d.en, th: d.th, img: 'assets/dest/' + key + '.jpg',
+      flight: d.flight, slug12go: d.slug12go, countryQ: 'Q869', countryTh: 'ไทย', countryEn: 'Thailand' };
+  },
   rooms(people){ return Math.max(1, Math.ceil(people / 2)); },
 
   addDays(iso, n){
     const d = new Date(iso + 'T00:00:00');
     d.setDate(d.getDate() + n);
     return d.toISOString().slice(0, 10);
+  },
+
+  // estimate from an explicit cost table (worldwide trips)
+  estimateCosts(costs, flightRT, style, nights, people, inclFlights){
+    const [accomRate, foodRate, transRate, actRate] = costs[style] || costs.mid;
+    const rooms = Core.rooms(people);
+    const b = {
+      accom: accomRate * nights * rooms,
+      food: foodRate * nights * people,
+      transport: transRate * nights * people,
+      act: actRate * nights * people,
+      flights: (inclFlights && flightRT) ? flightRT * people : 0,
+      shopping: 300 * people,
+    };
+    b.misc = Math.round(0.08 * (b.accom + b.food + b.transport + b.act));
+    return b;
   },
 
   // budget estimate in THB by destination averages
@@ -79,12 +109,15 @@ const Core = {
     const trip = {
       id: Core.state.nextId++,
       dest: opts.dest,
+      custom: opts.custom || null,
       style: opts.style,
       nights: opts.nights,
       people: opts.people,
       start: opts.start || '',
       inclFlights: !!opts.inclFlights,
-      budget: Core.estimate(opts.dest, opts.style, opts.nights, opts.people, opts.inclFlights),
+      budget: opts.custom
+        ? Core.estimateCosts(opts.custom.costs, opts.custom.flight, opts.style, opts.nights, opts.people, opts.inclFlights)
+        : Core.estimate(opts.dest, opts.style, opts.nights, opts.people, opts.inclFlights),
       expenses: [],
       created: Date.now(),
     };

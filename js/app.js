@@ -7,6 +7,11 @@ const App = {
 
   t(k){ return (I18N[Core.state.lang] || I18N.en)[k] || k; },
   img(key){ return 'assets/dest/' + key + '.jpg'; },
+  tripImg(trip){ return Core.destInfo(trip).img; },
+  tripName(trip){
+    const d = Core.destInfo(trip);
+    return Core.state.lang === 'th' ? d.th : d.en;
+  },
   dname(d){ return Core.state.lang === 'th' ? d.th : d.en; },
 
   init(){
@@ -68,25 +73,24 @@ const App = {
   // ---------- home ----------
   viewHome(){
     const w = App.el('<div></div>');
-    const nb = App.el('<button class="bigbtn">' + App.t('newTrip') + '</button>');
+    const nb = App.el('<button class="bigbtn">' + icon('plus') + ' ' + App.t('newTrip') + '</button>');
     nb.onclick = () => App.go('new');
     w.appendChild(nb);
-    const pb = App.el('<button class="bigbtn plan">' + App.t('planBtn') + '</button>');
+    const pb = App.el('<button class="bigbtn plan">' + icon('sparkles') + ' ' + App.t('planBtn') + '</button>');
     pb.onclick = () => App.go('plan');
     w.appendChild(pb);
     w.appendChild(App.el('<h2 class="sect">' + App.t('myTrips') + '</h2>'));
     if (!Core.state.trips.length){
-      w.appendChild(App.el('<div class="empty">🧳<br>' + App.t('noTrips') + '</div>'));
+      w.appendChild(App.el('<div class="empty">' + icon('suitcase', 'ic-big') + '<br>' + App.t('noTrips') + '</div>'));
     }
     for (const trip of Core.state.trips){
-      const d = Core.dest(trip);
       const total = Core.total(trip.budget);
       const sp = Core.spent(trip).total;
       const pct = total > 0 ? Math.min(100, Math.round(sp / total * 100)) : 0;
       const card = App.el(
         '<div class="tripcard photo">' +
-        '<div class="tc-photo" style="background-image:url(' + App.img(trip.dest) + ')">' +
-        '<div class="tc-overlay"><div class="tc-name">' + App.dname(d) + '</div>' +
+        '<div class="tc-photo" style="background-image:url(' + App.tripImg(trip) + ')">' +
+        '<div class="tc-overlay"><div class="tc-name">' + App.tripName(trip) + '</div>' +
         '<div class="tc-osub">' + trip.nights + ' ' + App.t('daysLeft') + ' · ' + trip.people + ' ' + (Core.state.lang === 'th' ? 'คน' : 'pax') + ' · ' + App.t(trip.style === 'budget' ? 'sBudget' : trip.style === 'comfort' ? 'sComfort' : 'sMid') + '</div></div>' +
         '<div class="tc-amt">' + Core.fmt(total) + '</div></div>' +
         '<div class="tc-body"><div class="bar"><div class="fill' + (sp > total ? ' over' : '') + '" style="width:' + pct + '%"></div></div>' +
@@ -103,13 +107,67 @@ const App = {
     const f = App.form;
     const w = App.el('<div></div>');
     w.appendChild(App.el('<h2 class="sect">' + App.t('where') + '</h2>'));
-    const grid = App.el('<div class="destgrid"></div>');
+
+    // worldwide smart search
+    const sb = App.el('<div class="searchbox">' + icon('globe') +
+      '<input id="wq" autocomplete="off" placeholder="' + App.t('searchWorld') + '">' +
+      '<div id="wsug" class="sug hidden"></div></div>');
+    const inp = sb.querySelector('#wq');
+    const sug = sb.querySelector('#wsug');
+    let deb = null;
+    inp.oninput = () => {
+      clearTimeout(deb);
+      const q = inp.value.trim();
+      if (q.length < 2){ sug.classList.add('hidden'); return; }
+      deb = setTimeout(async () => {
+        try {
+          const list = await World_suggest_safe(q);
+          sug.innerHTML = '';
+          for (const s of list){
+            const r = App.el('<div class="sugrow">' + icon('pin') + '<div class="grow"><b>' + s.title + '</b>' +
+              (s.desc ? '<div class="sub">' + s.desc.slice(0, 60) + '</div>' : '') + '</div></div>');
+            r.onclick = async () => {
+              sug.classList.add('hidden');
+              inp.value = s.title;
+              App.toast(App.t('searching'));
+              try {
+                const info = await WORLD.resolve(s.title, s.lang);
+                const cc = WORLD.costsFor(info.countryQ);
+                f.customSel = {
+                  name: info.name, img: info.img, countryQ: info.countryQ,
+                  countryEn: cc.en, countryTh: cc.th, costs: cc.costs, flight: cc.flight,
+                };
+                App.render();
+              } catch (e){ App.toast('!'); }
+            };
+            sug.appendChild(r);
+          }
+          sug.classList.toggle('hidden', !list.length);
+        } catch (e){ /* offline */ }
+      }, 350);
+    };
+    w.appendChild(sb);
+
+    if (f.customSel){
+      const c = f.customSel;
+      const cn = Core.state.lang === 'th' ? c.countryTh : c.countryEn;
+      const card = App.el('<div class="customsel"' + (c.img ? ' style="background-image:url(' + c.img + ')"' : '') + '>' +
+        '<div class="cs-grad"></div>' +
+        '<div class="cs-txt"><b>' + c.name + '</b><div class="cs-sub">' + cn + ' · ' + App.t('customNote') + '</div></div>' +
+        '<button class="cs-x">' + icon('x') + '</button></div>');
+      card.querySelector('.cs-x').onclick = () => { f.customSel = null; App.render(); };
+      w.appendChild(card);
+      w.appendChild(App.el('<div class="sub" style="margin:10px 2px 4px">' + App.t('anywhere') + '</div>'));
+    }
+
+    const grid = App.el('<div class="destgrid' + (f.customSel ? ' dim' : '') + '"></div>');
     for (const key in DESTS){
       const d = DESTS[key];
-      const b = App.el('<button class="pdest' + (f.dest === key ? ' on' : '') + '" style="background-image:url(' + App.img(key) + ')">' +
+      const on = !f.customSel && f.dest === key;
+      const b = App.el('<button class="pdest' + (on ? ' on' : '') + '" style="background-image:url(' + App.img(key) + ')">' +
         '<span class="pd-name">' + App.dname(d) + '</span>' +
-        (f.dest === key ? '<span class="pd-check">✓</span>' : '') + '</button>');
-      b.onclick = () => { f.dest = key; App.render(); };
+        (on ? '<span class="pd-check">' + icon('check') + '</span>' : '') + '</button>');
+      b.onclick = () => { f.dest = key; f.customSel = null; App.render(); };
       grid.appendChild(b);
     }
     w.appendChild(grid);
@@ -138,7 +196,7 @@ const App = {
     dr.querySelector('input').onchange = e => { f.start = e.target.value; };
     w.appendChild(dr);
 
-    const d = DESTS[f.dest];
+    const d = f.customSel ? { flight: f.customSel.flight } : DESTS[f.dest];
     if (d.flight){
       const fr = App.el('<div class="row"><div class="grow">' + App.t('inclFlights') + ' <span class="sub">(~' + Core.fmt(d.flight) + '/🧍)</span></div>' +
         '<input type="checkbox" class="chk" ' + (f.inclFlights ? 'checked' : '') + '></div>');
@@ -147,13 +205,17 @@ const App = {
     }
 
     // live preview
-    const est = Core.estimate(f.dest, f.style, f.nights, f.people, f.inclFlights && !!d.flight);
+    const est = f.customSel
+      ? Core.estimateCosts(f.customSel.costs, f.customSel.flight, f.style, f.nights, f.people, f.inclFlights)
+      : Core.estimate(f.dest, f.style, f.nights, f.people, f.inclFlights && !!d.flight);
     const tot = Core.total(est);
     w.appendChild(App.el('<div class="preview">' + Core.fmt(tot) + ' <span class="sub">· ' + Core.fmt(tot / f.people) + ' ' + App.t('perPerson') + '</span></div>'));
 
-    const cb = App.el('<button class="bigbtn">' + App.t('create') + '</button>');
+    const cb = App.el('<button class="bigbtn">' + icon('check') + ' ' + App.t('create') + '</button>');
     cb.onclick = () => {
-      const trip = Core.newTrip({ dest: f.dest, style: f.style, nights: f.nights, people: f.people, start: f.start, inclFlights: f.inclFlights && !!d.flight });
+      const trip = f.customSel
+        ? Core.newTrip({ dest: 'custom', custom: f.customSel, style: f.style, nights: f.nights, people: f.people, start: f.start, inclFlights: f.inclFlights })
+        : Core.newTrip({ dest: f.dest, style: f.style, nights: f.nights, people: f.people, start: f.start, inclFlights: f.inclFlights && !!d.flight });
       App.tab = 'budget';
       App.go('trip-' + trip.id);
     };
@@ -208,7 +270,7 @@ const App = {
     w.appendChild(App.el('<h2 class="sect">' + App.t('planResults') + '</h2>'));
     const opts = f.budget > 0 ? Core.planOptions(f.budget, f.people, f.style, f.inclFlights) : [];
     if (!opts.length){
-      w.appendChild(App.el('<div class="empty">🙈<br>' + App.t('noFit') + '</div>'));
+      w.appendChild(App.el('<div class="empty">' + icon('search', 'ic-big') + '<br>' + App.t('noFit') + '</div>'));
     }
     for (const o of opts.slice(0, 10)){
       const d = DESTS[o.dest];
@@ -218,7 +280,7 @@ const App = {
         '<div class="pl-n">' + o.nights + ' ' + App.t('daysLeft') + '</div>' +
         '<div class="tc-sub">' + Core.fmt(o.total) + ' · ' + App.t('left') + ' <b style="color:#1f9d61">' + Core.fmt(o.left) + '</b>' +
         (o.inclFlights ? ' · ✈️' : '') + '</div></div>' +
-        '<span class="bk-go">' + App.t('pickPlan') + ' →</span></div>');
+        '<span class="bk-go">' + App.t('pickPlan') + ' ' + icon('chevron') + '</span></div>');
       card.onclick = () => {
         const trip = Core.newTrip({ dest: o.dest, style: o.style, nights: o.nights, people: f.people, start: '', inclFlights: o.inclFlights });
         App.tab = 'budget';
@@ -227,7 +289,7 @@ const App = {
       };
       w.appendChild(card);
     }
-    const back = App.el('<button class="ghostb">←</button>');
+    const back = App.el('<button class="ghostb">' + icon('back') + '</button>');
     back.onclick = () => App.go('home');
     w.appendChild(back);
     return w;
@@ -235,15 +297,14 @@ const App = {
 
   // ---------- trip ----------
   viewTrip(trip){
-    const d = Core.dest(trip);
     const total = Core.total(trip.budget);
     const sp = Core.spent(trip);
     const w = App.el('<div></div>');
 
     const head = App.el(
-      '<div class="hero" style="background-image:url(' + App.img(trip.dest) + ')">' +
-      '<button class="back hbtn">←</button><button class="hbtn share" id="shareB">📤</button>' +
-      '<div class="hero-txt"><div class="hero-name">' + App.dname(d) + '</div>' +
+      '<div class="hero" style="background-image:url(' + App.tripImg(trip) + ')">' +
+      '<button class="back hbtn">' + icon('back') + '</button><button class="hbtn share" id="shareB">' + icon('share') + '</button>' +
+      '<div class="hero-txt"><div class="hero-name">' + App.tripName(trip) + '</div>' +
       '<div class="hero-sub">' + trip.nights + ' ' + App.t('daysLeft') + ' · ' + trip.people + ' ' + (Core.state.lang === 'th' ? 'คน' : 'pax') + (trip.start ? ' · ' + trip.start : '') + '</div></div></div>');
     head.querySelector('.back').onclick = () => App.go('home');
     head.querySelector('#shareB').onclick = () => App.shareTrip(trip);
@@ -256,8 +317,8 @@ const App = {
       '<div><div class="bn-l">' + App.t('remaining') + '</div><div class="bn-v" style="color:' + (remaining < 0 ? '#e25555' : '#1f9d61') + '">' + Core.fmt(remaining) + '</div></div></div>'));
 
     const tabs = App.el('<div class="tabs"></div>');
-    [['budget', 'budget'], ['expenses', 'expenses'], ['book', 'book']].forEach(([k, lk]) => {
-      const b = App.el('<button class="' + (App.tab === k ? 'on' : '') + '">' + App.t(lk) + '</button>');
+    [['budget', 'budget', 'wallet'], ['expenses', 'expenses', 'receipt'], ['book', 'book', 'tag']].forEach(([k, lk, ic]) => {
+      const b = App.el('<button class="' + (App.tab === k ? 'on' : '') + '">' + icon(ic) + ' ' + App.t(lk) + '</button>');
       b.onclick = () => { App.tab = k; App.render(); };
       tabs.appendChild(b);
     });
@@ -287,11 +348,11 @@ const App = {
       const pct = amt > 0 ? Math.min(100, Math.round(used / amt * 100)) : (used > 0 ? 100 : 0);
       const dealUrl = Links.forCategory(c.id, trip);
       const r = App.el(
-        '<div class="catrow"><div class="cr-top"><span>' + c.emoji + ' ' + App.t(c.id) + '</span>' +
+        '<div class="catrow"><div class="cr-top"><span>' + icon(c.icon, 'ic-cat') + ' ' + App.t(c.id) + '</span>' +
         '<input class="amt" inputmode="numeric" value="' + amt + '"></div>' +
         '<div class="bar"><div class="fill' + (used > amt ? ' over' : '') + '" style="width:' + pct + '%"></div></div>' +
         '<div class="cr-foot"><span class="sub">' + Core.fmt(used) + ' / ' + Core.fmt(amt) + '</span>' +
-        (dealUrl ? '<a class="dealb" target="_blank" rel="noopener sponsored" href="' + dealUrl + '">🔥 ' + App.t('deal') + ' ↗</a>' : '') +
+        (dealUrl ? '<a class="dealb" target="_blank" rel="noopener sponsored" href="' + dealUrl + '">' + icon('flame') + ' ' + App.t('deal') + '</a>' : '') +
         '</div></div>');
       const inp = r.querySelector('.amt');
       inp.onchange = () => {
@@ -301,9 +362,11 @@ const App = {
       };
       w.appendChild(r);
     }
-    const re = App.el('<button class="ghostb">' + App.t('reestimate') + '</button>');
+    const re = App.el('<button class="ghostb">' + icon('refresh') + ' ' + App.t('reestimate').replace('↻ ', '') + '</button>');
     re.onclick = () => {
-      trip.budget = Core.estimate(trip.dest, trip.style, trip.nights, trip.people, trip.inclFlights);
+      trip.budget = trip.custom
+        ? Core.estimateCosts(trip.custom.costs, trip.custom.flight, trip.style, trip.nights, trip.people, trip.inclFlights)
+        : Core.estimate(trip.dest, trip.style, trip.nights, trip.people, trip.inclFlights);
       Core.save();
       App.render();
     };
@@ -321,7 +384,7 @@ const App = {
     const chips = add.querySelector('.catchips');
     App._expCat = App._expCat || 'food';
     for (const c of CATS){
-      const b = App.el('<button class="chip' + (App._expCat === c.id ? ' on' : '') + '">' + c.emoji + ' ' + App.t(c.id) + '</button>');
+      const b = App.el('<button class="chip' + (App._expCat === c.id ? ' on' : '') + '">' + icon(c.icon) + ' ' + App.t(c.id) + '</button>');
       b.onclick = () => { App._expCat = c.id; App.render(); };
       chips.appendChild(b);
     }
@@ -334,15 +397,15 @@ const App = {
     w.appendChild(add);
 
     if (!trip.expenses.length){
-      w.appendChild(App.el('<div class="empty">🧾<br>' + App.t('noExpenses') + '</div>'));
+      w.appendChild(App.el('<div class="empty">' + icon('receipt', 'ic-big') + '<br>' + App.t('noExpenses') + '</div>'));
       return w;
     }
     for (const e of trip.expenses){
       const c = CATS.find(q => q.id === e.cat) || CATS[6];
-      const r = App.el('<div class="exprow"><span>' + c.emoji + '</span>' +
+      const r = App.el('<div class="exprow"><span class="exp-ic">' + icon(c.icon) + '</span>' +
         '<div class="grow"><b>' + Core.fmt(e.amount) + '</b>' + (e.note ? ' <span class="sub">' + e.note.replace(/</g, '&lt;') + '</span>' : '') +
         '<div class="sub">' + new Date(e.ts).toLocaleDateString() + ' · ' + App.t(e.cat) + '</div></div>' +
-        '<button class="xb">✕</button></div>');
+        '<button class="xb">' + icon('x') + '</button></div>');
       r.querySelector('.xb').onclick = () => { Core.removeExpense(trip, e.id); App.render(); };
       w.appendChild(r);
     }
@@ -358,29 +421,29 @@ const App = {
       // hotels: the tier matching this trip's style first
       const tierRank = t => (t === trip.style ? 0 : 1);
       const hotels = picks.h.slice().sort((a, b) => tierRank(a.tier) - tierRank(b.tier));
-      w.appendChild(App.el('<h2 class="sect">🏨 ' + App.t('recHotels') + '</h2>'));
+      w.appendChild(App.el('<h2 class="sect">' + icon('bed') + ' ' + App.t('recHotels') + '</h2>'));
       for (const h of hotels){
         const fits = h.tier === trip.style;
         const r = App.el('<a class="pickrow" target="_blank" rel="noopener sponsored" href="' + Links.hotelByName(trip, h.n) + '">' +
-          '<div class="grow"><b>' + App.pickName(h) + '</b>' + (fits ? ' <span class="bestbadge">★ ' + App.t('fitsPlan') + '</span>' : '') +
+          '<div class="grow"><b>' + App.pickName(h) + '</b>' + (fits ? ' <span class="bestbadge">' + icon('star') + ' ' + App.t('fitsPlan') + '</span>' : '') +
           '<div class="sub">' + h.area + ' · ' + App.t('approxFrom') + ' ' + Core.fmt(h.p) + App.t('perNight') + '</div></div>' +
-          '<span class="pk-btn agoda">' + App.t('bookBtn') + ' ↗</span></a>');
+          '<span class="pk-btn agoda">' + App.t('bookBtn') + '</span></a>');
         w.appendChild(r);
       }
-      w.appendChild(App.el('<h2 class="sect">🎟️ ' + App.t('topActs') + '</h2>'));
+      w.appendChild(App.el('<h2 class="sect">' + icon('ticket') + ' ' + App.t('topActs') + '</h2>'));
       for (const a of picks.a){
         const r = App.el('<a class="pickrow" target="_blank" rel="noopener sponsored" href="' + Links.actByName(a.n) + '">' +
           '<div class="grow"><b>' + App.pickName(a) + '</b>' +
           '<div class="sub">' + (a.p > 0 ? App.t('approxFrom') + ' ' + Core.fmt(a.p) + '/' + (Core.state.lang === 'th' ? 'คน' : 'pax') : App.t('freeEntry')) + '</div></div>' +
-          '<span class="pk-btn klook">' + App.t('bookBtn') + ' ↗</span></a>');
+          '<span class="pk-btn klook">' + App.t('bookBtn') + '</span></a>');
         w.appendChild(r);
       }
-      w.appendChild(App.el('<h2 class="sect">🍜 ' + App.t('mustEat') + '</h2>'));
+      w.appendChild(App.el('<h2 class="sect">' + icon('bowl') + ' ' + App.t('mustEat') + '</h2>'));
       for (const e2 of picks.e){
         const r = App.el('<a class="pickrow" target="_blank" rel="noopener" href="' + Links.placeMap(e2.n, trip) + '">' +
           '<div class="grow"><b>' + App.pickName(e2) + '</b>' +
           '<div class="sub">' + e2.area + ' · ' + '฿'.repeat(e2.p) + '</div></div>' +
-          '<span class="pk-btn map">' + App.t('mapBtn') + ' ↗</span></a>');
+          '<span class="pk-btn map">' + App.t('mapBtn') + '</span></a>');
         w.appendChild(r);
       }
     }
@@ -390,23 +453,31 @@ const App = {
     // one offer group per category, ranked by this trip's budget weight
     const groups = [
       { cat: 'accom', cards: [
-        ['🏨', App.t('bookHotelA'), App.t('bookHotelDesc'), Links.hotelAgoda(trip), 'agoda'],
-        ['🛏️', App.t('bookHotelB'), App.t('bookHotelDesc'), Links.hotelBooking(trip), 'booking'],
-      ] },
-      { cat: 'food', cards: [
-        ['🍜', App.t('bookFood'), App.t('bookFoodDesc'), Links.foodEatigo(trip), 'eatigo'],
-        ['🍱', App.t('bookFood2'), App.t('bookFood2Desc'), Links.foodHungryHub(), 'hungryhub'],
+        ['bed', App.t('bookHotelA'), App.t('bookHotelDesc'), Links.hotelAgoda(trip), 'agoda'],
+        ['building', App.t('bookHotelB'), App.t('bookHotelDesc'), Links.hotelBooking(trip), 'booking'],
       ] },
       { cat: 'act', cards: [
-        ['🎟️', App.t('bookAct'), App.t('bookActDesc'), Links.activities(trip), 'klook'],
-      ] },
-      { cat: 'transport', cards: [
-        ['🚌', App.t('bookGround'), App.t('bookGroundDesc'), Links.ground(trip), 'ground'],
+        ['ticket', App.t('bookAct'), App.t('bookActDesc'), Links.activities(trip), 'klook'],
       ] },
     ];
-    if (Core.dest(trip).flight || trip.inclFlights){
+    if (Links.foodAvailable(trip)){
+      groups.push({ cat: 'food', cards: [
+        ['bowl', App.t('bookFood'), App.t('bookFoodDesc'), Links.foodEatigo(trip), 'eatigo'],
+        ['bowl', App.t('bookFood2'), App.t('bookFood2Desc'), Links.foodHungryHub(), 'hungryhub'],
+      ] });
+    } else {
+      groups.push({ cat: 'food', cards: [
+        ['bowl', App.t('bookAct').replace('Klook', 'Klook'), App.t('bookFoodDesc'), Links.foodKlook(trip), 'klook'],
+      ] });
+    }
+    if (Links.groundAvailable(trip)){
+      groups.push({ cat: 'transport', cards: [
+        ['bus', App.t('bookGround'), App.t('bookGroundDesc'), Links.ground(trip), 'ground'],
+      ] });
+    }
+    if (Core.destInfo(trip).flight || trip.inclFlights){
       groups.push({ cat: 'flights', cards: [
-        ['✈️', App.t('bookFlights'), App.t('bookFlightsDesc'), Links.flights(), 'flights'],
+        ['plane', App.t('bookFlights'), App.t('bookFlightsDesc'), Links.flights(), 'flights'],
       ] });
     }
     groups.sort((a, b) => (trip.budget[b.cat] || 0) - (trip.budget[a.cat] || 0));
@@ -415,10 +486,10 @@ const App = {
       g.cards.forEach(([emoji, title, desc, url, cls], ci) => {
         const top = gi === 0 && ci === 0;
         const c = App.el('<a class="bookcard ' + cls + '" target="_blank" rel="noopener sponsored" href="' + url + '">' +
-          '<span class="bk-e">' + emoji + '</span><div class="grow"><b>' + title + '</b>' +
-          (top ? ' <span class="bestbadge">★ ' + App.t('bestBadge') + '</span>' : '') +
+          '<span class="bk-e">' + icon(emoji, 'ic-card') + '</span><div class="grow"><b>' + title + '</b>' +
+          (top ? ' <span class="bestbadge">' + icon('star') + ' ' + App.t('bestBadge') + '</span>' : '') +
           '<div class="sub">' + desc + ' · ' + App.t(g.cat) + ' ' + Core.fmt(trip.budget[g.cat] || 0) + '</div></div>' +
-          '<span class="bk-go">' + App.t('open') + ' ↗</span></a>');
+          '<span class="bk-go">' + App.t('open') + '</span></a>');
         w.appendChild(c);
       });
     });
@@ -427,9 +498,8 @@ const App = {
   },
 
   shareTrip(trip){
-    const d = Core.dest(trip);
     const total = Core.total(trip.budget);
-    const text = d.emoji + ' ' + App.dname(d) + ' · ' + trip.nights + ' ' + App.t('daysLeft') + ' · ' + trip.people + ' 🧍\n' +
+    const text = App.tripName(trip) + ' · ' + trip.nights + ' ' + App.t('daysLeft') + ' · ' + trip.people + '\n' +
       App.t('total') + ': ' + Core.fmt(total) + ' (' + Core.fmt(total / trip.people) + ' ' + App.t('perPerson') + ')\n— ' + App.t('sharedWith');
     if (navigator.share){
       navigator.share({ title: 'BudgetTrip', text }).catch(() => {});
@@ -440,5 +510,13 @@ const App = {
     }
   },
 };
+
+// suggestion fetch with a soft timeout so slow networks fail quietly
+function World_suggest_safe(q){
+  return Promise.race([
+    WORLD.suggest(q),
+    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 6000)),
+  ]);
+}
 
 window.addEventListener('load', () => App.init());

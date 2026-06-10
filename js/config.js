@@ -16,8 +16,9 @@ const Links = {
   enc: s => encodeURIComponent(s),
 
   hotelAgoda(trip){
-    const d = Core.dest(trip);
-    let u = 'https://www.agoda.com/search?textSearch=' + Links.enc(d.en + ', Thailand') +
+    const d = Core.destInfo(trip);
+    const where = d.key === 'custom' ? d.en : d.en + ', Thailand';
+    let u = 'https://www.agoda.com/search?textSearch=' + Links.enc(where) +
       '&adults=' + trip.people + '&rooms=' + Core.rooms(trip.people) + '&los=' + trip.nights;
     if (trip.start) u += '&checkIn=' + trip.start;
     if (AFF.agoda_cid) u += '&cid=' + AFF.agoda_cid;
@@ -25,8 +26,9 @@ const Links = {
   },
 
   hotelBooking(trip){
-    const d = Core.dest(trip);
-    let u = 'https://www.booking.com/searchresults.html?ss=' + Links.enc(d.en + ', Thailand') +
+    const d = Core.destInfo(trip);
+    const where2 = d.key === 'custom' ? d.en : d.en + ', Thailand';
+    let u = 'https://www.booking.com/searchresults.html?ss=' + Links.enc(where2) +
       '&group_adults=' + trip.people + '&no_rooms=' + Core.rooms(trip.people);
     if (trip.start){
       u += '&checkin=' + trip.start + '&checkout=' + Core.addDays(trip.start, trip.nights);
@@ -36,19 +38,23 @@ const Links = {
   },
 
   activities(trip){
-    const d = Core.dest(trip);
+    const d = Core.destInfo(trip);
     let u = 'https://www.klook.com/search/result/?query=' + Links.enc(d.en);
     if (AFF.klook_aid) u += '&aid=' + AFF.klook_aid;
     return u;
   },
 
   ground(trip){
-    const d = Core.dest(trip);
+    const d = Core.destInfo(trip);
     let u = d.slug12go
       ? 'https://12go.asia/en/travel/bangkok/' + d.slug12go
       : 'https://12go.asia/en';
     if (AFF.t12go_z) u += (u.includes('?') ? '&' : '?') + 'z=' + AFF.t12go_z;
     return u;
+  },
+  groundAvailable(trip){
+    const d = Core.destInfo(trip);
+    return !d.countryQ || WORLD.SEA.includes(d.countryQ);
   },
 
   flights(){
@@ -74,7 +80,7 @@ const Links = {
     return u;
   },
   foodKlook(trip){
-    const d = Core.dest(trip);
+    const d = Core.destInfo(trip);
     let u = 'https://www.klook.com/search/result/?query=' + Links.enc(d.en + ' food');
     if (AFF.klook_aid) u += '&aid=' + AFF.klook_aid;
     return u;
@@ -94,8 +100,11 @@ const Links = {
     return u;
   },
   placeMap(name, trip){
-    const d = Core.dest(trip);
-    return 'https://www.google.com/maps/search/' + Links.enc(name + ' ' + d.en + ' Thailand');
+    const d = Core.destInfo(trip);
+    return 'https://www.google.com/maps/search/' + Links.enc(name + ' ' + d.en + (d.key === 'custom' ? '' : ' Thailand'));
+  },
+  foodAvailable(trip){
+    return Core.destInfo(trip).countryQ === 'Q869';
   },
 
   // best affiliate for a budget category, with trip context

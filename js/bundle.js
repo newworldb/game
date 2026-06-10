@@ -1,5 +1,44 @@
 'use strict';
 // GENERATED FILE — edit js/*.js and run: node tools/build.js
+/* ===== icons.js ===== */
+// Inline SVG icon set (24x24, stroke style) — replaces emoji in the UI.
+const ICONS = {
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  sparkles: '<path d="M12 3l1.7 5L19 9.7l-5.3 1.7L12 16.5l-1.7-5.1L5 9.7l5.3-1.7L12 3Z"/><path d="M19 15l.7 2.1L22 17.8l-2.3.8L19 20.7l-.7-2.1-2.3-.8 2.3-.7L19 15Z"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/>',
+  globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.6 3 14.4 0 18-3-3.6-3-14.4 0-18Z"/>',
+  bed: '<path d="M3 7v11M3 16h18M21 18v-5a2 2 0 0 0-2-2H10v5"/><circle cx="6.5" cy="11" r="1.5"/>',
+  bowl: '<path d="M4 11h16a8 8 0 0 1-16 0Z"/><path d="M9 7c0-2.5 6-2.5 6 0"/>',
+  bus: '<rect x="4" y="4" width="16" height="13" rx="2"/><path d="M4 11h16"/><circle cx="8.5" cy="19" r="1.5"/><circle cx="15.5" cy="19" r="1.5"/>',
+  ticket: '<rect x="3" y="7" width="18" height="10" rx="2"/><path d="M13 7v10" stroke-dasharray="2.5 2.5"/>',
+  plane: '<path d="M22 2 11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7Z"/>',
+  bag: '<path d="M6 7h12l1 13H5L6 7Z"/><path d="M9 10V6a3 3 0 0 1 6 0v4"/>',
+  coins: '<circle cx="9" cy="9" r="5.5"/><path d="M14.8 11.5A5.5 5.5 0 1 1 12.5 14.8"/>',
+  wallet: '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M15.5 14.5h2.5"/>',
+  receipt: '<path d="M6 3h12v18l-2-1.3-2 1.3-2-1.3L10 21l-2-1.3L6 21V3Z"/><path d="M9 8h6M9 12h6"/>',
+  tag: '<path d="M3 12V4h8l10 10-8 8-10-10Z"/><circle cx="7.5" cy="8.5" r="1.5"/>',
+  flame: '<path d="M12 3c1.2 3.2-3 5.2-3 9a4.5 4.5 0 0 0 9 0c0-1.8-.8-3.3-1.8-4.8-.6 1-1.7 1.8-1.7 1.8C14.8 6.8 13.4 4.6 12 3Z"/>',
+  star: '<path d="m12 3 2.7 5.6 6.3.9-4.6 4.4 1.1 6.1L12 17.1 6.5 20l1.1-6.1L3 9.5l6.3-.9L12 3Z"/>',
+  check: '<path d="m4 12.5 5 5L20 7"/>',
+  x: '<path d="M6 6l12 12M18 6 6 18"/>',
+  share: '<circle cx="6" cy="12" r="2.5"/><circle cx="17" cy="6" r="2.5"/><circle cx="17" cy="18" r="2.5"/><path d="m8.3 10.8 6.4-3.6M8.3 13.2l6.4 3.6"/>',
+  back: '<path d="M19 12H5M11 18l-6-6 6-6"/>',
+  pin: '<path d="M12 21s-7-5.4-7-11a7 7 0 0 1 14 0c0 5.6-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/>',
+  calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 3v4M16 3v4"/>',
+  users: '<circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0 1 12 0"/><circle cx="17" cy="9" r="2.5"/><path d="M16.5 14.6c2.6.6 4.5 2.8 4.5 5.4"/>',
+  trash: '<path d="M4 7h16M9 7V4h6v3M6.5 7l1 14h9l1-14"/><path d="M10 11v6M14 11v6"/>',
+  moon: '<path d="M20 13.5A8 8 0 1 1 10.5 4 6.5 6.5 0 0 0 20 13.5Z"/>',
+  suitcase: '<rect x="5" y="7" width="14" height="13" rx="2"/><path d="M9 7V4h6v3M9 11v5M15 11v5"/>',
+  chevron: '<path d="m9 6 6 6-6 6"/>',
+  building: '<rect x="5" y="3" width="14" height="18" rx="1"/><path d="M9 7h2m2 0h2M9 11h2m2 0h2M9 15h2m2 0h2"/>',
+  refresh: '<path d="M21 12a9 9 0 1 1-2.9-6.6M21 3v6h-6"/>',
+  palm: '<path d="M12 8c0 6-1.5 10-3 13M12 8C10 5 6.5 4.5 4 6.5c3-.5 5.5.5 8 1.5ZM12 8c.5-3.5 3.5-5.5 7-4.5-2.5.5-5 2-7 4.5ZM12 8c3-1.5 6.5-.5 8 2.5-2.5-1.5-5-2-8-2.5Z"/>',
+};
+
+function icon(name, cls){
+  return '<svg class="ic' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ICONS[name] || ICONS.pin) + '</svg>';
+}
+
 /* ===== config.js ===== */
 // Affiliate configuration — put your partner IDs here. Links work without
 // them (no tracking); with them, bookings earn your commission.
@@ -18,8 +57,9 @@ const Links = {
   enc: s => encodeURIComponent(s),
 
   hotelAgoda(trip){
-    const d = Core.dest(trip);
-    let u = 'https://www.agoda.com/search?textSearch=' + Links.enc(d.en + ', Thailand') +
+    const d = Core.destInfo(trip);
+    const where = d.key === 'custom' ? d.en : d.en + ', Thailand';
+    let u = 'https://www.agoda.com/search?textSearch=' + Links.enc(where) +
       '&adults=' + trip.people + '&rooms=' + Core.rooms(trip.people) + '&los=' + trip.nights;
     if (trip.start) u += '&checkIn=' + trip.start;
     if (AFF.agoda_cid) u += '&cid=' + AFF.agoda_cid;
@@ -27,8 +67,9 @@ const Links = {
   },
 
   hotelBooking(trip){
-    const d = Core.dest(trip);
-    let u = 'https://www.booking.com/searchresults.html?ss=' + Links.enc(d.en + ', Thailand') +
+    const d = Core.destInfo(trip);
+    const where2 = d.key === 'custom' ? d.en : d.en + ', Thailand';
+    let u = 'https://www.booking.com/searchresults.html?ss=' + Links.enc(where2) +
       '&group_adults=' + trip.people + '&no_rooms=' + Core.rooms(trip.people);
     if (trip.start){
       u += '&checkin=' + trip.start + '&checkout=' + Core.addDays(trip.start, trip.nights);
@@ -38,19 +79,23 @@ const Links = {
   },
 
   activities(trip){
-    const d = Core.dest(trip);
+    const d = Core.destInfo(trip);
     let u = 'https://www.klook.com/search/result/?query=' + Links.enc(d.en);
     if (AFF.klook_aid) u += '&aid=' + AFF.klook_aid;
     return u;
   },
 
   ground(trip){
-    const d = Core.dest(trip);
+    const d = Core.destInfo(trip);
     let u = d.slug12go
       ? 'https://12go.asia/en/travel/bangkok/' + d.slug12go
       : 'https://12go.asia/en';
     if (AFF.t12go_z) u += (u.includes('?') ? '&' : '?') + 'z=' + AFF.t12go_z;
     return u;
+  },
+  groundAvailable(trip){
+    const d = Core.destInfo(trip);
+    return !d.countryQ || WORLD.SEA.includes(d.countryQ);
   },
 
   flights(){
@@ -76,7 +121,7 @@ const Links = {
     return u;
   },
   foodKlook(trip){
-    const d = Core.dest(trip);
+    const d = Core.destInfo(trip);
     let u = 'https://www.klook.com/search/result/?query=' + Links.enc(d.en + ' food');
     if (AFF.klook_aid) u += '&aid=' + AFF.klook_aid;
     return u;
@@ -96,8 +141,11 @@ const Links = {
     return u;
   },
   placeMap(name, trip){
-    const d = Core.dest(trip);
-    return 'https://www.google.com/maps/search/' + Links.enc(name + ' ' + d.en + ' Thailand');
+    const d = Core.destInfo(trip);
+    return 'https://www.google.com/maps/search/' + Links.enc(name + ' ' + d.en + (d.key === 'custom' ? '' : ' Thailand'));
+  },
+  foodAvailable(trip){
+    return Core.destInfo(trip).countryQ === 'Q869';
   },
 
   // best affiliate for a budget category, with trip context
@@ -143,19 +191,19 @@ const DESTS = {
 };
 
 const CATS = [
-  { id: 'accom', emoji: '🏨' },
-  { id: 'food', emoji: '🍜' },
-  { id: 'transport', emoji: '🛵' },
-  { id: 'act', emoji: '🎟️' },
-  { id: 'flights', emoji: '✈️' },
-  { id: 'shopping', emoji: '🛍️' },
-  { id: 'misc', emoji: '💸' },
+  { id: 'accom', icon: 'bed' },
+  { id: 'food', icon: 'bowl' },
+  { id: 'transport', icon: 'bus' },
+  { id: 'act', icon: 'ticket' },
+  { id: 'flights', icon: 'plane' },
+  { id: 'shopping', icon: 'bag' },
+  { id: 'misc', icon: 'coins' },
 ];
 
 const I18N = {
   en: {
     tagline: 'Plan your Thai trip budget in 30 seconds',
-    newTrip: '+ New Trip', myTrips: 'My trips', noTrips: 'No trips yet — plan your first one!',
+    newTrip: 'New Trip', myTrips: 'My trips', noTrips: 'No trips yet — plan your first one!',
     where: 'Where to?', nights: 'Nights', people: 'Travelers', style: 'Travel style',
     sBudget: 'Backpacker', sMid: 'Comfortable', sComfort: 'Premium',
     startDate: 'Start date (optional)', inclFlights: 'Include flights from Bangkok',
@@ -176,7 +224,7 @@ const I18N = {
     share: 'Share', deleteTrip: 'Delete trip', confirm: 'Tap again to confirm',
     over: 'over budget', daysLeft: 'nights', open: 'Open',
     sharedWith: 'planned with BudgetTrip',
-    planBtn: '💰 I have a budget — plan for me',
+    planBtn: 'I have a budget — plan for me',
     planTitle: 'How much do you have?',
     yourBudget: 'Your budget (฿)',
     planResults: 'With this budget you can go…',
@@ -194,10 +242,12 @@ const I18N = {
     recHotels: 'Recommended hotels', topActs: 'Top things to do', mustEat: 'Where locals eat',
     perNight: '/night', approxFrom: 'approx from', fitsPlan: 'fits your plan', freeEntry: 'free',
     mapBtn: 'Map', bookBtn: 'Book', morePartners: 'Search everything yourself',
+    searchWorld: 'Search any city worldwide…', searching: 'Searching…',
+    customNote: 'Smart estimate from country averages', anywhere: 'Or pick a Thai favorite',
   },
   th: {
     tagline: 'วางแผนงบเที่ยวไทยใน 30 วินาที',
-    newTrip: '+ ทริปใหม่', myTrips: 'ทริปของฉัน', noTrips: 'ยังไม่มีทริป — เริ่มวางแผนกันเลย!',
+    newTrip: 'ทริปใหม่', myTrips: 'ทริปของฉัน', noTrips: 'ยังไม่มีทริป — เริ่มวางแผนกันเลย!',
     where: 'ไปเที่ยวที่ไหน?', nights: 'จำนวนคืน', people: 'ผู้เดินทาง', style: 'สไตล์การเที่ยว',
     sBudget: 'ประหยัด', sMid: 'มาตรฐาน', sComfort: 'พรีเมียม',
     startDate: 'วันออกเดินทาง (ไม่บังคับ)', inclFlights: 'รวมตั๋วเครื่องบินจากกรุงเทพฯ',
@@ -218,7 +268,7 @@ const I18N = {
     share: 'แชร์', deleteTrip: 'ลบทริป', confirm: 'แตะอีกครั้งเพื่อยืนยัน',
     over: 'เกินงบ', daysLeft: 'คืน', open: 'เปิด',
     sharedWith: 'วางแผนด้วย BudgetTrip',
-    planBtn: '💰 มีตังเท่านี้ ให้แอพวางแผน',
+    planBtn: 'มีตังเท่านี้ ให้แอพวางแผน',
     planTitle: 'มีงบเท่าไหร่?',
     yourBudget: 'งบของคุณ (฿)',
     planResults: 'งบนี้ไปได้เลย…',
@@ -236,6 +286,8 @@ const I18N = {
     recHotels: 'โรงแรมแนะนำ', topActs: 'กิจกรรมยอดฮิต', mustEat: 'ร้านเด็ดต้องลอง',
     perNight: '/คืน', approxFrom: 'เริ่ม ~', fitsPlan: 'เหมาะกับแผนคุณ', freeEntry: 'ฟรี',
     mapBtn: 'แผนที่', bookBtn: 'จอง', morePartners: 'ค้นหาเองทั้งหมด',
+    searchWorld: 'ค้นหาเมืองทั่วโลก เช่น Tokyo, Paris…', searching: 'กำลังค้นหา…',
+    customNote: 'ประเมินอัจฉริยะจากค่าเฉลี่ยของประเทศ', anywhere: 'หรือเลือกที่เที่ยวยอดฮิตในไทย',
   },
 };
 
@@ -452,6 +504,160 @@ const PICKS = {
   },
 };
 
+/* ===== world.js ===== */
+// Worldwide destination search (Wikipedia + Wikidata, no API keys) and
+// per-country daily cost data (THB) for trips outside the Thai presets.
+// costs: { style: [hotel ฿/room/night, food ฿/person/day, local transport, activities] }
+// flight: rough round-trip from Bangkok per person (THB).
+const WORLD = {
+  // Q-id -> country costs
+  C: {
+    Q869:  { en: 'Thailand', th: 'ไทย', flight: 2000,
+      costs: { budget: [450, 250, 130, 200], mid: [1400, 600, 300, 500], comfort: [3800, 1400, 600, 1000] } },
+    Q17:   { en: 'Japan', th: 'ญี่ปุ่น', flight: 14000,
+      costs: { budget: [1800, 900, 450, 600], mid: [4200, 1800, 700, 1200], comfort: [9500, 3800, 1200, 2500] } },
+    Q884:  { en: 'South Korea', th: 'เกาหลีใต้', flight: 11000,
+      costs: { budget: [1500, 800, 400, 500], mid: [3500, 1500, 600, 1100], comfort: [8000, 3200, 1000, 2200] } },
+    Q881:  { en: 'Vietnam', th: 'เวียดนาม', flight: 5000,
+      costs: { budget: [500, 300, 150, 250], mid: [1300, 650, 300, 550], comfort: [3500, 1500, 600, 1100] } },
+    Q819:  { en: 'Laos', th: 'ลาว', flight: 4500,
+      costs: { budget: [450, 280, 150, 220], mid: [1100, 600, 300, 500], comfort: [3000, 1300, 550, 900] } },
+    Q424:  { en: 'Cambodia', th: 'กัมพูชา', flight: 4500,
+      costs: { budget: [450, 300, 150, 250], mid: [1200, 650, 300, 550], comfort: [3200, 1400, 600, 1000] } },
+    Q836:  { en: 'Myanmar', th: 'เมียนมา', flight: 4500,
+      costs: { budget: [500, 300, 150, 220], mid: [1300, 650, 300, 500], comfort: [3200, 1400, 600, 900] } },
+    Q833:  { en: 'Malaysia', th: 'มาเลเซีย', flight: 4500,
+      costs: { budget: [700, 400, 200, 300], mid: [1700, 800, 350, 650], comfort: [4200, 1700, 650, 1200] } },
+    Q334:  { en: 'Singapore', th: 'สิงคโปร์', flight: 5500,
+      costs: { budget: [1800, 800, 350, 600], mid: [4500, 1600, 550, 1200], comfort: [10000, 3500, 900, 2400] } },
+    Q252:  { en: 'Indonesia', th: 'อินโดนีเซีย', flight: 7000,
+      costs: { budget: [600, 350, 200, 300], mid: [1600, 750, 350, 650], comfort: [4200, 1600, 650, 1200] } },
+    Q928:  { en: 'Philippines', th: 'ฟิลิปปินส์', flight: 7500,
+      costs: { budget: [700, 400, 200, 300], mid: [1700, 800, 350, 650], comfort: [4200, 1700, 650, 1200] } },
+    Q148:  { en: 'China', th: 'จีน', flight: 9000,
+      costs: { budget: [1000, 500, 300, 400], mid: [2500, 1100, 500, 900], comfort: [6000, 2400, 900, 1800] } },
+    Q865:  { en: 'Taiwan', th: 'ไต้หวัน', flight: 8500,
+      costs: { budget: [1200, 600, 300, 450], mid: [2800, 1200, 500, 900], comfort: [6500, 2500, 800, 1800] } },
+    Q8646: { en: 'Hong Kong', th: 'ฮ่องกง', flight: 7500,
+      costs: { budget: [1800, 800, 350, 550], mid: [4200, 1600, 550, 1200], comfort: [9500, 3200, 900, 2400] } },
+    Q14773:{ en: 'Macau', th: 'มาเก๊า', flight: 7500,
+      costs: { budget: [1600, 700, 300, 500], mid: [3800, 1400, 500, 1100], comfort: [9000, 3000, 800, 2200] } },
+    Q668:  { en: 'India', th: 'อินเดีย', flight: 9000,
+      costs: { budget: [600, 350, 200, 300], mid: [1600, 750, 350, 650], comfort: [4200, 1600, 650, 1200] } },
+    Q854:  { en: 'Sri Lanka', th: 'ศรีลังกา', flight: 9000,
+      costs: { budget: [700, 400, 200, 300], mid: [1700, 800, 350, 650], comfort: [4200, 1700, 650, 1200] } },
+    Q837:  { en: 'Nepal', th: 'เนปาล', flight: 9500,
+      costs: { budget: [500, 350, 200, 350], mid: [1400, 700, 350, 700], comfort: [3800, 1500, 600, 1300] } },
+    Q826:  { en: 'Maldives', th: 'มัลดีฟส์', flight: 12000,
+      costs: { budget: [2200, 900, 400, 800], mid: [6500, 2000, 700, 1800], comfort: [20000, 4500, 1200, 3500] } },
+    Q878:  { en: 'UAE', th: 'สหรัฐอาหรับเอมิเรตส์', flight: 14000,
+      costs: { budget: [2000, 900, 400, 700], mid: [4500, 1800, 700, 1500], comfort: [11000, 3800, 1200, 3000] } },
+    Q43:   { en: 'Turkey', th: 'ตุรกี', flight: 17000,
+      costs: { budget: [1200, 600, 300, 500], mid: [2800, 1200, 500, 1000], comfort: [6500, 2500, 900, 2000] } },
+    Q145:  { en: 'United Kingdom', th: 'อังกฤษ', flight: 26000,
+      costs: { budget: [2800, 1200, 600, 800], mid: [6000, 2400, 900, 1600], comfort: [13000, 4500, 1400, 3200] } },
+    Q142:  { en: 'France', th: 'ฝรั่งเศส', flight: 25000,
+      costs: { budget: [2600, 1200, 550, 800], mid: [5500, 2400, 850, 1600], comfort: [12000, 4500, 1300, 3200] } },
+    Q38:   { en: 'Italy', th: 'อิตาลี', flight: 25000,
+      costs: { budget: [2400, 1100, 500, 800], mid: [5000, 2200, 800, 1600], comfort: [11000, 4200, 1200, 3000] } },
+    Q29:   { en: 'Spain', th: 'สเปน', flight: 25000,
+      costs: { budget: [2200, 1000, 500, 700], mid: [4500, 2000, 750, 1400], comfort: [10000, 3800, 1100, 2800] } },
+    Q45:   { en: 'Portugal', th: 'โปรตุเกส', flight: 26000,
+      costs: { budget: [2000, 900, 450, 650], mid: [4200, 1800, 700, 1300], comfort: [9000, 3500, 1000, 2600] } },
+    Q183:  { en: 'Germany', th: 'เยอรมนี', flight: 25000,
+      costs: { budget: [2400, 1100, 550, 700], mid: [5000, 2200, 850, 1400], comfort: [10500, 4000, 1300, 2800] } },
+    Q55:   { en: 'Netherlands', th: 'เนเธอร์แลนด์', flight: 25000,
+      costs: { budget: [2800, 1200, 600, 800], mid: [5800, 2400, 900, 1600], comfort: [12000, 4500, 1400, 3200] } },
+    Q39:   { en: 'Switzerland', th: 'สวิตเซอร์แลนด์', flight: 27000,
+      costs: { budget: [3800, 1600, 800, 1000], mid: [7500, 3200, 1200, 2000], comfort: [16000, 6000, 1800, 4000] } },
+    Q40:   { en: 'Austria', th: 'ออสเตรีย', flight: 26000,
+      costs: { budget: [2600, 1100, 550, 750], mid: [5200, 2200, 850, 1500], comfort: [11000, 4200, 1300, 3000] } },
+    Q213:  { en: 'Czechia', th: 'เช็ก', flight: 25000,
+      costs: { budget: [1800, 800, 400, 600], mid: [3800, 1600, 650, 1200], comfort: [8500, 3200, 1000, 2400] } },
+    Q28:   { en: 'Hungary', th: 'ฮังการี', flight: 25000,
+      costs: { budget: [1700, 800, 400, 550], mid: [3600, 1500, 600, 1100], comfort: [8000, 3000, 950, 2200] } },
+    Q36:   { en: 'Poland', th: 'โปแลนด์', flight: 25000,
+      costs: { budget: [1600, 750, 380, 550], mid: [3400, 1500, 600, 1100], comfort: [7500, 2800, 900, 2200] } },
+    Q41:   { en: 'Greece', th: 'กรีซ', flight: 24000,
+      costs: { budget: [2000, 950, 450, 650], mid: [4200, 1900, 700, 1300], comfort: [9500, 3600, 1100, 2600] } },
+    Q20:   { en: 'Norway', th: 'นอร์เวย์', flight: 28000,
+      costs: { budget: [3400, 1500, 750, 900], mid: [6800, 3000, 1100, 1800], comfort: [14000, 5500, 1700, 3600] } },
+    Q34:   { en: 'Sweden', th: 'สวีเดน', flight: 27000,
+      costs: { budget: [3000, 1300, 650, 850], mid: [6000, 2700, 1000, 1700], comfort: [12500, 5000, 1500, 3400] } },
+    Q35:   { en: 'Denmark', th: 'เดนมาร์ก', flight: 27000,
+      costs: { budget: [3200, 1400, 700, 850], mid: [6400, 2800, 1050, 1700], comfort: [13000, 5200, 1600, 3400] } },
+    Q33:   { en: 'Finland', th: 'ฟินแลนด์', flight: 26000,
+      costs: { budget: [2900, 1300, 650, 800], mid: [5800, 2600, 1000, 1600], comfort: [12000, 4800, 1500, 3200] } },
+    Q189:  { en: 'Iceland', th: 'ไอซ์แลนด์', flight: 32000,
+      costs: { budget: [3800, 1700, 850, 1100], mid: [7600, 3400, 1300, 2200], comfort: [15500, 6200, 2000, 4400] } },
+    Q30:   { en: 'United States', th: 'สหรัฐอเมริกา', flight: 35000,
+      costs: { budget: [3400, 1500, 750, 900], mid: [7000, 3000, 1100, 1800], comfort: [15000, 5800, 1700, 3600] } },
+    Q16:   { en: 'Canada', th: 'แคนาดา', flight: 35000,
+      costs: { budget: [3000, 1300, 650, 850], mid: [6200, 2700, 1000, 1700], comfort: [13000, 5200, 1500, 3400] } },
+    Q96:   { en: 'Mexico', th: 'เม็กซิโก', flight: 38000,
+      costs: { budget: [1400, 700, 350, 550], mid: [3200, 1400, 600, 1100], comfort: [7500, 2800, 950, 2200] } },
+    Q155:  { en: 'Brazil', th: 'บราซิล', flight: 42000,
+      costs: { budget: [1600, 800, 400, 600], mid: [3500, 1600, 650, 1200], comfort: [8000, 3000, 1000, 2400] } },
+    Q414:  { en: 'Argentina', th: 'อาร์เจนตินา', flight: 45000,
+      costs: { budget: [1500, 750, 380, 550], mid: [3300, 1500, 600, 1100], comfort: [7500, 2800, 950, 2200] } },
+    Q419:  { en: 'Peru', th: 'เปรู', flight: 45000,
+      costs: { budget: [1300, 650, 350, 550], mid: [3000, 1300, 550, 1100], comfort: [7000, 2600, 900, 2200] } },
+    Q408:  { en: 'Australia', th: 'ออสเตรเลีย', flight: 18000,
+      costs: { budget: [3000, 1300, 650, 850], mid: [6200, 2700, 1000, 1700], comfort: [13000, 5200, 1500, 3400] } },
+    Q664:  { en: 'New Zealand', th: 'นิวซีแลนด์', flight: 22000,
+      costs: { budget: [2800, 1200, 600, 850], mid: [5800, 2500, 950, 1700], comfort: [12000, 4800, 1450, 3400] } },
+    Q79:   { en: 'Egypt', th: 'อียิปต์', flight: 16000,
+      costs: { budget: [900, 500, 250, 450], mid: [2200, 1000, 450, 900], comfort: [5500, 2200, 750, 1800] } },
+    Q1028: { en: 'Morocco', th: 'โมร็อกโก', flight: 22000,
+      costs: { budget: [1100, 550, 300, 450], mid: [2600, 1100, 500, 950], comfort: [6000, 2400, 800, 1900] } },
+    Q258:  { en: 'South Africa', th: 'แอฟริกาใต้', flight: 22000,
+      costs: { budget: [1400, 700, 400, 600], mid: [3200, 1400, 650, 1200], comfort: [7500, 2800, 1000, 2400] } },
+    Q801:  { en: 'Israel', th: 'อิสราเอล', flight: 18000,
+      costs: { budget: [2600, 1200, 550, 750], mid: [5200, 2300, 850, 1500], comfort: [11000, 4200, 1300, 3000] } },
+    Q230:  { en: 'Georgia', th: 'จอร์เจีย', flight: 15000,
+      costs: { budget: [1100, 550, 280, 450], mid: [2500, 1100, 480, 900], comfort: [6000, 2300, 750, 1800] } },
+  },
+  DEFAULT: { en: 'World', th: 'ทั่วโลก', flight: 20000,
+    costs: { budget: [1800, 900, 450, 600], mid: [4000, 1800, 700, 1300], comfort: [9000, 3500, 1100, 2600] } },
+  SEA: ['Q869', 'Q881', 'Q819', 'Q424', 'Q836', 'Q833', 'Q334', 'Q252', 'Q928'],
+
+  countryOf(qid){ return WORLD.C[qid] || null; },
+  costsFor(qid){ return (WORLD.C[qid] || WORLD.DEFAULT); },
+
+  // ---- live search (browser only) ----
+  wikiLang(q){ return /[฀-๿]/.test(q) ? 'th' : 'en'; },
+
+  async suggest(q){
+    const lang = WORLD.wikiLang(q);
+    const u = 'https://' + lang + '.wikipedia.org/w/api.php?action=opensearch&format=json&origin=*&limit=6&search=' + encodeURIComponent(q);
+    const r = await fetch(u);
+    const d = await r.json();
+    return (d[1] || []).map((title, i) => ({ title, desc: (d[2] || [])[i] || '', lang }));
+  },
+
+  // resolve a wikipedia title to {name, img, qid, countryQ}
+  async resolve(title, lang){
+    const r = await fetch('https://' + lang + '.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(title.replace(/ /g, '_')));
+    const s = await r.json();
+    const out = {
+      name: s.title || title,
+      desc: s.description || '',
+      img: (s.thumbnail && s.thumbnail.source) ? s.thumbnail.source.replace(/\/(\d+)px-/, '/800px-') : '',
+      qid: s.wikibase_item || '',
+      countryQ: '',
+    };
+    if (out.qid){
+      try {
+        const cr = await fetch('https://www.wikidata.org/w/api.php?action=wbgetclaims&format=json&origin=*&property=P17&entity=' + out.qid);
+        const cd = await cr.json();
+        const claims = (cd.claims && cd.claims.P17) || [];
+        if (claims.length) out.countryQ = 'Q' + claims[0].mainsnak.datavalue.value['numeric-id'];
+      } catch (e) { /* country unknown -> world default */ }
+    }
+    return out;
+  },
+};
+
 /* ===== core.js ===== */
 // DOM-free app core: budget math, trip model, persistence.
 const Core = {
@@ -474,12 +680,42 @@ const Core = {
   },
 
   dest(trip){ return DESTS[trip.dest] || DESTS.bangkok; },
+
+  // unified destination info for Thai presets and worldwide custom trips
+  destInfo(trip){
+    if (trip.dest === 'custom' && trip.custom){
+      const c = trip.custom;
+      return { key: 'custom', en: c.name, th: c.name, img: c.img || '',
+        flight: c.flight || 0, slug12go: '', countryQ: c.countryQ || '',
+        countryTh: c.countryTh || '', countryEn: c.countryEn || '' };
+    }
+    const d = DESTS[trip.dest] || DESTS.bangkok;
+    const key = DESTS[trip.dest] ? trip.dest : 'bangkok';
+    return { key, en: d.en, th: d.th, img: 'assets/dest/' + key + '.jpg',
+      flight: d.flight, slug12go: d.slug12go, countryQ: 'Q869', countryTh: 'ไทย', countryEn: 'Thailand' };
+  },
   rooms(people){ return Math.max(1, Math.ceil(people / 2)); },
 
   addDays(iso, n){
     const d = new Date(iso + 'T00:00:00');
     d.setDate(d.getDate() + n);
     return d.toISOString().slice(0, 10);
+  },
+
+  // estimate from an explicit cost table (worldwide trips)
+  estimateCosts(costs, flightRT, style, nights, people, inclFlights){
+    const [accomRate, foodRate, transRate, actRate] = costs[style] || costs.mid;
+    const rooms = Core.rooms(people);
+    const b = {
+      accom: accomRate * nights * rooms,
+      food: foodRate * nights * people,
+      transport: transRate * nights * people,
+      act: actRate * nights * people,
+      flights: (inclFlights && flightRT) ? flightRT * people : 0,
+      shopping: 300 * people,
+    };
+    b.misc = Math.round(0.08 * (b.accom + b.food + b.transport + b.act));
+    return b;
   },
 
   // budget estimate in THB by destination averages
@@ -533,12 +769,15 @@ const Core = {
     const trip = {
       id: Core.state.nextId++,
       dest: opts.dest,
+      custom: opts.custom || null,
       style: opts.style,
       nights: opts.nights,
       people: opts.people,
       start: opts.start || '',
       inclFlights: !!opts.inclFlights,
-      budget: Core.estimate(opts.dest, opts.style, opts.nights, opts.people, opts.inclFlights),
+      budget: opts.custom
+        ? Core.estimateCosts(opts.custom.costs, opts.custom.flight, opts.style, opts.nights, opts.people, opts.inclFlights)
+        : Core.estimate(opts.dest, opts.style, opts.nights, opts.people, opts.inclFlights),
       expenses: [],
       created: Date.now(),
     };
@@ -589,6 +828,11 @@ const App = {
 
   t(k){ return (I18N[Core.state.lang] || I18N.en)[k] || k; },
   img(key){ return 'assets/dest/' + key + '.jpg'; },
+  tripImg(trip){ return Core.destInfo(trip).img; },
+  tripName(trip){
+    const d = Core.destInfo(trip);
+    return Core.state.lang === 'th' ? d.th : d.en;
+  },
   dname(d){ return Core.state.lang === 'th' ? d.th : d.en; },
 
   init(){
@@ -650,25 +894,24 @@ const App = {
   // ---------- home ----------
   viewHome(){
     const w = App.el('<div></div>');
-    const nb = App.el('<button class="bigbtn">' + App.t('newTrip') + '</button>');
+    const nb = App.el('<button class="bigbtn">' + icon('plus') + ' ' + App.t('newTrip') + '</button>');
     nb.onclick = () => App.go('new');
     w.appendChild(nb);
-    const pb = App.el('<button class="bigbtn plan">' + App.t('planBtn') + '</button>');
+    const pb = App.el('<button class="bigbtn plan">' + icon('sparkles') + ' ' + App.t('planBtn') + '</button>');
     pb.onclick = () => App.go('plan');
     w.appendChild(pb);
     w.appendChild(App.el('<h2 class="sect">' + App.t('myTrips') + '</h2>'));
     if (!Core.state.trips.length){
-      w.appendChild(App.el('<div class="empty">🧳<br>' + App.t('noTrips') + '</div>'));
+      w.appendChild(App.el('<div class="empty">' + icon('suitcase', 'ic-big') + '<br>' + App.t('noTrips') + '</div>'));
     }
     for (const trip of Core.state.trips){
-      const d = Core.dest(trip);
       const total = Core.total(trip.budget);
       const sp = Core.spent(trip).total;
       const pct = total > 0 ? Math.min(100, Math.round(sp / total * 100)) : 0;
       const card = App.el(
         '<div class="tripcard photo">' +
-        '<div class="tc-photo" style="background-image:url(' + App.img(trip.dest) + ')">' +
-        '<div class="tc-overlay"><div class="tc-name">' + App.dname(d) + '</div>' +
+        '<div class="tc-photo" style="background-image:url(' + App.tripImg(trip) + ')">' +
+        '<div class="tc-overlay"><div class="tc-name">' + App.tripName(trip) + '</div>' +
         '<div class="tc-osub">' + trip.nights + ' ' + App.t('daysLeft') + ' · ' + trip.people + ' ' + (Core.state.lang === 'th' ? 'คน' : 'pax') + ' · ' + App.t(trip.style === 'budget' ? 'sBudget' : trip.style === 'comfort' ? 'sComfort' : 'sMid') + '</div></div>' +
         '<div class="tc-amt">' + Core.fmt(total) + '</div></div>' +
         '<div class="tc-body"><div class="bar"><div class="fill' + (sp > total ? ' over' : '') + '" style="width:' + pct + '%"></div></div>' +
@@ -685,13 +928,67 @@ const App = {
     const f = App.form;
     const w = App.el('<div></div>');
     w.appendChild(App.el('<h2 class="sect">' + App.t('where') + '</h2>'));
-    const grid = App.el('<div class="destgrid"></div>');
+
+    // worldwide smart search
+    const sb = App.el('<div class="searchbox">' + icon('globe') +
+      '<input id="wq" autocomplete="off" placeholder="' + App.t('searchWorld') + '">' +
+      '<div id="wsug" class="sug hidden"></div></div>');
+    const inp = sb.querySelector('#wq');
+    const sug = sb.querySelector('#wsug');
+    let deb = null;
+    inp.oninput = () => {
+      clearTimeout(deb);
+      const q = inp.value.trim();
+      if (q.length < 2){ sug.classList.add('hidden'); return; }
+      deb = setTimeout(async () => {
+        try {
+          const list = await World_suggest_safe(q);
+          sug.innerHTML = '';
+          for (const s of list){
+            const r = App.el('<div class="sugrow">' + icon('pin') + '<div class="grow"><b>' + s.title + '</b>' +
+              (s.desc ? '<div class="sub">' + s.desc.slice(0, 60) + '</div>' : '') + '</div></div>');
+            r.onclick = async () => {
+              sug.classList.add('hidden');
+              inp.value = s.title;
+              App.toast(App.t('searching'));
+              try {
+                const info = await WORLD.resolve(s.title, s.lang);
+                const cc = WORLD.costsFor(info.countryQ);
+                f.customSel = {
+                  name: info.name, img: info.img, countryQ: info.countryQ,
+                  countryEn: cc.en, countryTh: cc.th, costs: cc.costs, flight: cc.flight,
+                };
+                App.render();
+              } catch (e){ App.toast('!'); }
+            };
+            sug.appendChild(r);
+          }
+          sug.classList.toggle('hidden', !list.length);
+        } catch (e){ /* offline */ }
+      }, 350);
+    };
+    w.appendChild(sb);
+
+    if (f.customSel){
+      const c = f.customSel;
+      const cn = Core.state.lang === 'th' ? c.countryTh : c.countryEn;
+      const card = App.el('<div class="customsel"' + (c.img ? ' style="background-image:url(' + c.img + ')"' : '') + '>' +
+        '<div class="cs-grad"></div>' +
+        '<div class="cs-txt"><b>' + c.name + '</b><div class="cs-sub">' + cn + ' · ' + App.t('customNote') + '</div></div>' +
+        '<button class="cs-x">' + icon('x') + '</button></div>');
+      card.querySelector('.cs-x').onclick = () => { f.customSel = null; App.render(); };
+      w.appendChild(card);
+      w.appendChild(App.el('<div class="sub" style="margin:10px 2px 4px">' + App.t('anywhere') + '</div>'));
+    }
+
+    const grid = App.el('<div class="destgrid' + (f.customSel ? ' dim' : '') + '"></div>');
     for (const key in DESTS){
       const d = DESTS[key];
-      const b = App.el('<button class="pdest' + (f.dest === key ? ' on' : '') + '" style="background-image:url(' + App.img(key) + ')">' +
+      const on = !f.customSel && f.dest === key;
+      const b = App.el('<button class="pdest' + (on ? ' on' : '') + '" style="background-image:url(' + App.img(key) + ')">' +
         '<span class="pd-name">' + App.dname(d) + '</span>' +
-        (f.dest === key ? '<span class="pd-check">✓</span>' : '') + '</button>');
-      b.onclick = () => { f.dest = key; App.render(); };
+        (on ? '<span class="pd-check">' + icon('check') + '</span>' : '') + '</button>');
+      b.onclick = () => { f.dest = key; f.customSel = null; App.render(); };
       grid.appendChild(b);
     }
     w.appendChild(grid);
@@ -720,7 +1017,7 @@ const App = {
     dr.querySelector('input').onchange = e => { f.start = e.target.value; };
     w.appendChild(dr);
 
-    const d = DESTS[f.dest];
+    const d = f.customSel ? { flight: f.customSel.flight } : DESTS[f.dest];
     if (d.flight){
       const fr = App.el('<div class="row"><div class="grow">' + App.t('inclFlights') + ' <span class="sub">(~' + Core.fmt(d.flight) + '/🧍)</span></div>' +
         '<input type="checkbox" class="chk" ' + (f.inclFlights ? 'checked' : '') + '></div>');
@@ -729,13 +1026,17 @@ const App = {
     }
 
     // live preview
-    const est = Core.estimate(f.dest, f.style, f.nights, f.people, f.inclFlights && !!d.flight);
+    const est = f.customSel
+      ? Core.estimateCosts(f.customSel.costs, f.customSel.flight, f.style, f.nights, f.people, f.inclFlights)
+      : Core.estimate(f.dest, f.style, f.nights, f.people, f.inclFlights && !!d.flight);
     const tot = Core.total(est);
     w.appendChild(App.el('<div class="preview">' + Core.fmt(tot) + ' <span class="sub">· ' + Core.fmt(tot / f.people) + ' ' + App.t('perPerson') + '</span></div>'));
 
-    const cb = App.el('<button class="bigbtn">' + App.t('create') + '</button>');
+    const cb = App.el('<button class="bigbtn">' + icon('check') + ' ' + App.t('create') + '</button>');
     cb.onclick = () => {
-      const trip = Core.newTrip({ dest: f.dest, style: f.style, nights: f.nights, people: f.people, start: f.start, inclFlights: f.inclFlights && !!d.flight });
+      const trip = f.customSel
+        ? Core.newTrip({ dest: 'custom', custom: f.customSel, style: f.style, nights: f.nights, people: f.people, start: f.start, inclFlights: f.inclFlights })
+        : Core.newTrip({ dest: f.dest, style: f.style, nights: f.nights, people: f.people, start: f.start, inclFlights: f.inclFlights && !!d.flight });
       App.tab = 'budget';
       App.go('trip-' + trip.id);
     };
@@ -790,7 +1091,7 @@ const App = {
     w.appendChild(App.el('<h2 class="sect">' + App.t('planResults') + '</h2>'));
     const opts = f.budget > 0 ? Core.planOptions(f.budget, f.people, f.style, f.inclFlights) : [];
     if (!opts.length){
-      w.appendChild(App.el('<div class="empty">🙈<br>' + App.t('noFit') + '</div>'));
+      w.appendChild(App.el('<div class="empty">' + icon('search', 'ic-big') + '<br>' + App.t('noFit') + '</div>'));
     }
     for (const o of opts.slice(0, 10)){
       const d = DESTS[o.dest];
@@ -800,7 +1101,7 @@ const App = {
         '<div class="pl-n">' + o.nights + ' ' + App.t('daysLeft') + '</div>' +
         '<div class="tc-sub">' + Core.fmt(o.total) + ' · ' + App.t('left') + ' <b style="color:#1f9d61">' + Core.fmt(o.left) + '</b>' +
         (o.inclFlights ? ' · ✈️' : '') + '</div></div>' +
-        '<span class="bk-go">' + App.t('pickPlan') + ' →</span></div>');
+        '<span class="bk-go">' + App.t('pickPlan') + ' ' + icon('chevron') + '</span></div>');
       card.onclick = () => {
         const trip = Core.newTrip({ dest: o.dest, style: o.style, nights: o.nights, people: f.people, start: '', inclFlights: o.inclFlights });
         App.tab = 'budget';
@@ -809,7 +1110,7 @@ const App = {
       };
       w.appendChild(card);
     }
-    const back = App.el('<button class="ghostb">←</button>');
+    const back = App.el('<button class="ghostb">' + icon('back') + '</button>');
     back.onclick = () => App.go('home');
     w.appendChild(back);
     return w;
@@ -817,15 +1118,14 @@ const App = {
 
   // ---------- trip ----------
   viewTrip(trip){
-    const d = Core.dest(trip);
     const total = Core.total(trip.budget);
     const sp = Core.spent(trip);
     const w = App.el('<div></div>');
 
     const head = App.el(
-      '<div class="hero" style="background-image:url(' + App.img(trip.dest) + ')">' +
-      '<button class="back hbtn">←</button><button class="hbtn share" id="shareB">📤</button>' +
-      '<div class="hero-txt"><div class="hero-name">' + App.dname(d) + '</div>' +
+      '<div class="hero" style="background-image:url(' + App.tripImg(trip) + ')">' +
+      '<button class="back hbtn">' + icon('back') + '</button><button class="hbtn share" id="shareB">' + icon('share') + '</button>' +
+      '<div class="hero-txt"><div class="hero-name">' + App.tripName(trip) + '</div>' +
       '<div class="hero-sub">' + trip.nights + ' ' + App.t('daysLeft') + ' · ' + trip.people + ' ' + (Core.state.lang === 'th' ? 'คน' : 'pax') + (trip.start ? ' · ' + trip.start : '') + '</div></div></div>');
     head.querySelector('.back').onclick = () => App.go('home');
     head.querySelector('#shareB').onclick = () => App.shareTrip(trip);
@@ -838,8 +1138,8 @@ const App = {
       '<div><div class="bn-l">' + App.t('remaining') + '</div><div class="bn-v" style="color:' + (remaining < 0 ? '#e25555' : '#1f9d61') + '">' + Core.fmt(remaining) + '</div></div></div>'));
 
     const tabs = App.el('<div class="tabs"></div>');
-    [['budget', 'budget'], ['expenses', 'expenses'], ['book', 'book']].forEach(([k, lk]) => {
-      const b = App.el('<button class="' + (App.tab === k ? 'on' : '') + '">' + App.t(lk) + '</button>');
+    [['budget', 'budget', 'wallet'], ['expenses', 'expenses', 'receipt'], ['book', 'book', 'tag']].forEach(([k, lk, ic]) => {
+      const b = App.el('<button class="' + (App.tab === k ? 'on' : '') + '">' + icon(ic) + ' ' + App.t(lk) + '</button>');
       b.onclick = () => { App.tab = k; App.render(); };
       tabs.appendChild(b);
     });
@@ -869,11 +1169,11 @@ const App = {
       const pct = amt > 0 ? Math.min(100, Math.round(used / amt * 100)) : (used > 0 ? 100 : 0);
       const dealUrl = Links.forCategory(c.id, trip);
       const r = App.el(
-        '<div class="catrow"><div class="cr-top"><span>' + c.emoji + ' ' + App.t(c.id) + '</span>' +
+        '<div class="catrow"><div class="cr-top"><span>' + icon(c.icon, 'ic-cat') + ' ' + App.t(c.id) + '</span>' +
         '<input class="amt" inputmode="numeric" value="' + amt + '"></div>' +
         '<div class="bar"><div class="fill' + (used > amt ? ' over' : '') + '" style="width:' + pct + '%"></div></div>' +
         '<div class="cr-foot"><span class="sub">' + Core.fmt(used) + ' / ' + Core.fmt(amt) + '</span>' +
-        (dealUrl ? '<a class="dealb" target="_blank" rel="noopener sponsored" href="' + dealUrl + '">🔥 ' + App.t('deal') + ' ↗</a>' : '') +
+        (dealUrl ? '<a class="dealb" target="_blank" rel="noopener sponsored" href="' + dealUrl + '">' + icon('flame') + ' ' + App.t('deal') + '</a>' : '') +
         '</div></div>');
       const inp = r.querySelector('.amt');
       inp.onchange = () => {
@@ -883,9 +1183,11 @@ const App = {
       };
       w.appendChild(r);
     }
-    const re = App.el('<button class="ghostb">' + App.t('reestimate') + '</button>');
+    const re = App.el('<button class="ghostb">' + icon('refresh') + ' ' + App.t('reestimate').replace('↻ ', '') + '</button>');
     re.onclick = () => {
-      trip.budget = Core.estimate(trip.dest, trip.style, trip.nights, trip.people, trip.inclFlights);
+      trip.budget = trip.custom
+        ? Core.estimateCosts(trip.custom.costs, trip.custom.flight, trip.style, trip.nights, trip.people, trip.inclFlights)
+        : Core.estimate(trip.dest, trip.style, trip.nights, trip.people, trip.inclFlights);
       Core.save();
       App.render();
     };
@@ -903,7 +1205,7 @@ const App = {
     const chips = add.querySelector('.catchips');
     App._expCat = App._expCat || 'food';
     for (const c of CATS){
-      const b = App.el('<button class="chip' + (App._expCat === c.id ? ' on' : '') + '">' + c.emoji + ' ' + App.t(c.id) + '</button>');
+      const b = App.el('<button class="chip' + (App._expCat === c.id ? ' on' : '') + '">' + icon(c.icon) + ' ' + App.t(c.id) + '</button>');
       b.onclick = () => { App._expCat = c.id; App.render(); };
       chips.appendChild(b);
     }
@@ -916,15 +1218,15 @@ const App = {
     w.appendChild(add);
 
     if (!trip.expenses.length){
-      w.appendChild(App.el('<div class="empty">🧾<br>' + App.t('noExpenses') + '</div>'));
+      w.appendChild(App.el('<div class="empty">' + icon('receipt', 'ic-big') + '<br>' + App.t('noExpenses') + '</div>'));
       return w;
     }
     for (const e of trip.expenses){
       const c = CATS.find(q => q.id === e.cat) || CATS[6];
-      const r = App.el('<div class="exprow"><span>' + c.emoji + '</span>' +
+      const r = App.el('<div class="exprow"><span class="exp-ic">' + icon(c.icon) + '</span>' +
         '<div class="grow"><b>' + Core.fmt(e.amount) + '</b>' + (e.note ? ' <span class="sub">' + e.note.replace(/</g, '&lt;') + '</span>' : '') +
         '<div class="sub">' + new Date(e.ts).toLocaleDateString() + ' · ' + App.t(e.cat) + '</div></div>' +
-        '<button class="xb">✕</button></div>');
+        '<button class="xb">' + icon('x') + '</button></div>');
       r.querySelector('.xb').onclick = () => { Core.removeExpense(trip, e.id); App.render(); };
       w.appendChild(r);
     }
@@ -940,29 +1242,29 @@ const App = {
       // hotels: the tier matching this trip's style first
       const tierRank = t => (t === trip.style ? 0 : 1);
       const hotels = picks.h.slice().sort((a, b) => tierRank(a.tier) - tierRank(b.tier));
-      w.appendChild(App.el('<h2 class="sect">🏨 ' + App.t('recHotels') + '</h2>'));
+      w.appendChild(App.el('<h2 class="sect">' + icon('bed') + ' ' + App.t('recHotels') + '</h2>'));
       for (const h of hotels){
         const fits = h.tier === trip.style;
         const r = App.el('<a class="pickrow" target="_blank" rel="noopener sponsored" href="' + Links.hotelByName(trip, h.n) + '">' +
-          '<div class="grow"><b>' + App.pickName(h) + '</b>' + (fits ? ' <span class="bestbadge">★ ' + App.t('fitsPlan') + '</span>' : '') +
+          '<div class="grow"><b>' + App.pickName(h) + '</b>' + (fits ? ' <span class="bestbadge">' + icon('star') + ' ' + App.t('fitsPlan') + '</span>' : '') +
           '<div class="sub">' + h.area + ' · ' + App.t('approxFrom') + ' ' + Core.fmt(h.p) + App.t('perNight') + '</div></div>' +
-          '<span class="pk-btn agoda">' + App.t('bookBtn') + ' ↗</span></a>');
+          '<span class="pk-btn agoda">' + App.t('bookBtn') + '</span></a>');
         w.appendChild(r);
       }
-      w.appendChild(App.el('<h2 class="sect">🎟️ ' + App.t('topActs') + '</h2>'));
+      w.appendChild(App.el('<h2 class="sect">' + icon('ticket') + ' ' + App.t('topActs') + '</h2>'));
       for (const a of picks.a){
         const r = App.el('<a class="pickrow" target="_blank" rel="noopener sponsored" href="' + Links.actByName(a.n) + '">' +
           '<div class="grow"><b>' + App.pickName(a) + '</b>' +
           '<div class="sub">' + (a.p > 0 ? App.t('approxFrom') + ' ' + Core.fmt(a.p) + '/' + (Core.state.lang === 'th' ? 'คน' : 'pax') : App.t('freeEntry')) + '</div></div>' +
-          '<span class="pk-btn klook">' + App.t('bookBtn') + ' ↗</span></a>');
+          '<span class="pk-btn klook">' + App.t('bookBtn') + '</span></a>');
         w.appendChild(r);
       }
-      w.appendChild(App.el('<h2 class="sect">🍜 ' + App.t('mustEat') + '</h2>'));
+      w.appendChild(App.el('<h2 class="sect">' + icon('bowl') + ' ' + App.t('mustEat') + '</h2>'));
       for (const e2 of picks.e){
         const r = App.el('<a class="pickrow" target="_blank" rel="noopener" href="' + Links.placeMap(e2.n, trip) + '">' +
           '<div class="grow"><b>' + App.pickName(e2) + '</b>' +
           '<div class="sub">' + e2.area + ' · ' + '฿'.repeat(e2.p) + '</div></div>' +
-          '<span class="pk-btn map">' + App.t('mapBtn') + ' ↗</span></a>');
+          '<span class="pk-btn map">' + App.t('mapBtn') + '</span></a>');
         w.appendChild(r);
       }
     }
@@ -972,23 +1274,31 @@ const App = {
     // one offer group per category, ranked by this trip's budget weight
     const groups = [
       { cat: 'accom', cards: [
-        ['🏨', App.t('bookHotelA'), App.t('bookHotelDesc'), Links.hotelAgoda(trip), 'agoda'],
-        ['🛏️', App.t('bookHotelB'), App.t('bookHotelDesc'), Links.hotelBooking(trip), 'booking'],
-      ] },
-      { cat: 'food', cards: [
-        ['🍜', App.t('bookFood'), App.t('bookFoodDesc'), Links.foodEatigo(trip), 'eatigo'],
-        ['🍱', App.t('bookFood2'), App.t('bookFood2Desc'), Links.foodHungryHub(), 'hungryhub'],
+        ['bed', App.t('bookHotelA'), App.t('bookHotelDesc'), Links.hotelAgoda(trip), 'agoda'],
+        ['building', App.t('bookHotelB'), App.t('bookHotelDesc'), Links.hotelBooking(trip), 'booking'],
       ] },
       { cat: 'act', cards: [
-        ['🎟️', App.t('bookAct'), App.t('bookActDesc'), Links.activities(trip), 'klook'],
-      ] },
-      { cat: 'transport', cards: [
-        ['🚌', App.t('bookGround'), App.t('bookGroundDesc'), Links.ground(trip), 'ground'],
+        ['ticket', App.t('bookAct'), App.t('bookActDesc'), Links.activities(trip), 'klook'],
       ] },
     ];
-    if (Core.dest(trip).flight || trip.inclFlights){
+    if (Links.foodAvailable(trip)){
+      groups.push({ cat: 'food', cards: [
+        ['bowl', App.t('bookFood'), App.t('bookFoodDesc'), Links.foodEatigo(trip), 'eatigo'],
+        ['bowl', App.t('bookFood2'), App.t('bookFood2Desc'), Links.foodHungryHub(), 'hungryhub'],
+      ] });
+    } else {
+      groups.push({ cat: 'food', cards: [
+        ['bowl', App.t('bookAct').replace('Klook', 'Klook'), App.t('bookFoodDesc'), Links.foodKlook(trip), 'klook'],
+      ] });
+    }
+    if (Links.groundAvailable(trip)){
+      groups.push({ cat: 'transport', cards: [
+        ['bus', App.t('bookGround'), App.t('bookGroundDesc'), Links.ground(trip), 'ground'],
+      ] });
+    }
+    if (Core.destInfo(trip).flight || trip.inclFlights){
       groups.push({ cat: 'flights', cards: [
-        ['✈️', App.t('bookFlights'), App.t('bookFlightsDesc'), Links.flights(), 'flights'],
+        ['plane', App.t('bookFlights'), App.t('bookFlightsDesc'), Links.flights(), 'flights'],
       ] });
     }
     groups.sort((a, b) => (trip.budget[b.cat] || 0) - (trip.budget[a.cat] || 0));
@@ -997,10 +1307,10 @@ const App = {
       g.cards.forEach(([emoji, title, desc, url, cls], ci) => {
         const top = gi === 0 && ci === 0;
         const c = App.el('<a class="bookcard ' + cls + '" target="_blank" rel="noopener sponsored" href="' + url + '">' +
-          '<span class="bk-e">' + emoji + '</span><div class="grow"><b>' + title + '</b>' +
-          (top ? ' <span class="bestbadge">★ ' + App.t('bestBadge') + '</span>' : '') +
+          '<span class="bk-e">' + icon(emoji, 'ic-card') + '</span><div class="grow"><b>' + title + '</b>' +
+          (top ? ' <span class="bestbadge">' + icon('star') + ' ' + App.t('bestBadge') + '</span>' : '') +
           '<div class="sub">' + desc + ' · ' + App.t(g.cat) + ' ' + Core.fmt(trip.budget[g.cat] || 0) + '</div></div>' +
-          '<span class="bk-go">' + App.t('open') + ' ↗</span></a>');
+          '<span class="bk-go">' + App.t('open') + '</span></a>');
         w.appendChild(c);
       });
     });
@@ -1009,9 +1319,8 @@ const App = {
   },
 
   shareTrip(trip){
-    const d = Core.dest(trip);
     const total = Core.total(trip.budget);
-    const text = d.emoji + ' ' + App.dname(d) + ' · ' + trip.nights + ' ' + App.t('daysLeft') + ' · ' + trip.people + ' 🧍\n' +
+    const text = App.tripName(trip) + ' · ' + trip.nights + ' ' + App.t('daysLeft') + ' · ' + trip.people + '\n' +
       App.t('total') + ': ' + Core.fmt(total) + ' (' + Core.fmt(total / trip.people) + ' ' + App.t('perPerson') + ')\n— ' + App.t('sharedWith');
     if (navigator.share){
       navigator.share({ title: 'BudgetTrip', text }).catch(() => {});
@@ -1022,5 +1331,13 @@ const App = {
     }
   },
 };
+
+// suggestion fetch with a soft timeout so slow networks fail quietly
+function World_suggest_safe(q){
+  return Promise.race([
+    WORLD.suggest(q),
+    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 6000)),
+  ]);
+}
 
 window.addEventListener('load', () => App.init());

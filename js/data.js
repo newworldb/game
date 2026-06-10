@@ -30,19 +30,19 @@ const DESTS = {
 };
 
 const CATS = [
-  { id: 'accom', emoji: '🏨' },
-  { id: 'food', emoji: '🍜' },
-  { id: 'transport', emoji: '🛵' },
-  { id: 'act', emoji: '🎟️' },
-  { id: 'flights', emoji: '✈️' },
-  { id: 'shopping', emoji: '🛍️' },
-  { id: 'misc', emoji: '💸' },
+  { id: 'accom', icon: 'bed' },
+  { id: 'food', icon: 'bowl' },
+  { id: 'transport', icon: 'bus' },
+  { id: 'act', icon: 'ticket' },
+  { id: 'flights', icon: 'plane' },
+  { id: 'shopping', icon: 'bag' },
+  { id: 'misc', icon: 'coins' },
 ];
 
 const I18N = {
   en: {
     tagline: 'Plan your Thai trip budget in 30 seconds',
-    newTrip: '+ New Trip', myTrips: 'My trips', noTrips: 'No trips yet — plan your first one!',
+    newTrip: 'New Trip', myTrips: 'My trips', noTrips: 'No trips yet — plan your first one!',
     where: 'Where to?', nights: 'Nights', people: 'Travelers', style: 'Travel style',
     sBudget: 'Backpacker', sMid: 'Comfortable', sComfort: 'Premium',
     startDate: 'Start date (optional)', inclFlights: 'Include flights from Bangkok',
@@ -63,7 +63,7 @@ const I18N = {
     share: 'Share', deleteTrip: 'Delete trip', confirm: 'Tap again to confirm',
     over: 'over budget', daysLeft: 'nights', open: 'Open',
     sharedWith: 'planned with BudgetTrip',
-    planBtn: '💰 I have a budget — plan for me',
+    planBtn: 'I have a budget — plan for me',
     planTitle: 'How much do you have?',
     yourBudget: 'Your budget (฿)',
     planResults: 'With this budget you can go…',
@@ -81,10 +81,12 @@ const I18N = {
     recHotels: 'Recommended hotels', topActs: 'Top things to do', mustEat: 'Where locals eat',
     perNight: '/night', approxFrom: 'approx from', fitsPlan: 'fits your plan', freeEntry: 'free',
     mapBtn: 'Map', bookBtn: 'Book', morePartners: 'Search everything yourself',
+    searchWorld: 'Search any city worldwide…', searching: 'Searching…',
+    customNote: 'Smart estimate from country averages', anywhere: 'Or pick a Thai favorite',
   },
   th: {
     tagline: 'วางแผนงบเที่ยวไทยใน 30 วินาที',
-    newTrip: '+ ทริปใหม่', myTrips: 'ทริปของฉัน', noTrips: 'ยังไม่มีทริป — เริ่มวางแผนกันเลย!',
+    newTrip: 'ทริปใหม่', myTrips: 'ทริปของฉัน', noTrips: 'ยังไม่มีทริป — เริ่มวางแผนกันเลย!',
     where: 'ไปเที่ยวที่ไหน?', nights: 'จำนวนคืน', people: 'ผู้เดินทาง', style: 'สไตล์การเที่ยว',
     sBudget: 'ประหยัด', sMid: 'มาตรฐาน', sComfort: 'พรีเมียม',
     startDate: 'วันออกเดินทาง (ไม่บังคับ)', inclFlights: 'รวมตั๋วเครื่องบินจากกรุงเทพฯ',
@@ -105,7 +107,7 @@ const I18N = {
     share: 'แชร์', deleteTrip: 'ลบทริป', confirm: 'แตะอีกครั้งเพื่อยืนยัน',
     over: 'เกินงบ', daysLeft: 'คืน', open: 'เปิด',
     sharedWith: 'วางแผนด้วย BudgetTrip',
-    planBtn: '💰 มีตังเท่านี้ ให้แอพวางแผน',
+    planBtn: 'มีตังเท่านี้ ให้แอพวางแผน',
     planTitle: 'มีงบเท่าไหร่?',
     yourBudget: 'งบของคุณ (฿)',
     planResults: 'งบนี้ไปได้เลย…',
@@ -123,5 +125,7 @@ const I18N = {
     recHotels: 'โรงแรมแนะนำ', topActs: 'กิจกรรมยอดฮิต', mustEat: 'ร้านเด็ดต้องลอง',
     perNight: '/คืน', approxFrom: 'เริ่ม ~', fitsPlan: 'เหมาะกับแผนคุณ', freeEntry: 'ฟรี',
     mapBtn: 'แผนที่', bookBtn: 'จอง', morePartners: 'ค้นหาเองทั้งหมด',
+    searchWorld: 'ค้นหาเมืองทั่วโลก เช่น Tokyo, Paris…', searching: 'กำลังค้นหา…',
+    customNote: 'ประเมินอัจฉริยะจากค่าเฉลี่ยของประเทศ', anywhere: 'หรือเลือกที่เที่ยวยอดฮิตในไทย',
   },
 };

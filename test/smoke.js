@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
-const files = ['config.js', 'data.js', 'picks.js', 'core.js'];
+const files = ['icons.js', 'config.js', 'data.js', 'picks.js', 'world.js', 'core.js'];
 const src = files.map(f => fs.readFileSync(path.join(__dirname, '..', 'js', f), 'utf8')).join('\n');
 const sandbox = { console, localStorage: { getItem: () => null, setItem: () => {} } };
 vm.createContext(sandbox);
@@ -115,5 +115,37 @@ assert(named.includes('agoda.com') && named.includes('cid=999001') && named.incl
 assert(Links.actByName(PICKS.phuket.a[0].n).includes('klook.com'), 'named activity link');
 assert(Links.placeMap(PICKS.bangkok.e[2].n, bkk).includes('google.com/maps'), 'restaurant map link');
 
-console.log('BUDGETTRIP SMOKE TEST PASSED —', Object.keys(DESTS).length, 'destinations, 108 curated picks, estimates, planner, affiliate links OK');
+// worldwide country cost table
+let nC = 0;
+for (const q in WORLD.C){
+  const c = WORLD.C[q];
+  assert(c.en && c.th && c.flight >= 0, q + ' country names');
+  for (const s of ['budget', 'mid', 'comfort'])
+    assert(Array.isArray(c.costs[s]) && c.costs[s].length === 4 && c.costs[s].every(n => n > 0), q + '/' + s);
+  assert(Core.total(Core.estimateCosts(c.costs, c.flight, 'budget', 3, 2, false)) <
+         Core.total(Core.estimateCosts(c.costs, c.flight, 'comfort', 3, 2, false)), q + ' style order');
+  nC++;
+}
+assert(nC >= 45, 'at least 45 countries, got ' + nC);
+assert(WORLD.costsFor('Q999999') === WORLD.DEFAULT, 'unknown country falls back to world default');
+
+// custom worldwide trip end-to-end
+const jp = WORLD.C.Q17;
+const tokyo = Core.newTrip({ dest: 'custom', style: 'mid', nights: 5, people: 2, start: '2026-10-01', inclFlights: true,
+  custom: { name: 'Tokyo', img: 'https://example.com/t.jpg', countryQ: 'Q17', countryEn: jp.en, countryTh: jp.th, costs: jp.costs, flight: jp.flight } });
+assert(tokyo.budget.flights === 28000, 'tokyo flights 2x14000');
+assert(Core.total(tokyo.budget) > 60000, 'tokyo 5n mid is substantial: ' + Core.total(tokyo.budget));
+const di = Core.destInfo(tokyo);
+assert(di.en === 'Tokyo' && di.img.includes('example.com') && di.countryQ === 'Q17', 'destInfo custom');
+assert(Links.hotelAgoda(tokyo).includes('Tokyo') && !Links.hotelAgoda(tokyo).includes('Thailand'), 'agoda worldwide link');
+assert(!Links.groundAvailable(tokyo), '12go hidden outside SEA');
+assert(!Links.foodAvailable(tokyo), 'eatigo hidden outside Thailand');
+assert(Links.groundAvailable(bkk) && Links.foodAvailable(bkk), 'thai trips keep all partners');
+
+// icons exist for every reference
+for (const c of CATS) assert(ICONS[c.icon], 'icon for ' + c.id);
+for (const n of ['plus','sparkles','search','globe','check','x','share','back','star','flame','wallet','receipt','tag','suitcase','refresh','chevron','pin','building','bus','plane','bed','bowl','ticket','bag','coins'])
+  assert(ICONS[n], 'icon ' + n);
+
+console.log('BUDGETTRIP SMOKE TEST PASSED —', Object.keys(DESTS).length, 'Thai dests, 108 picks,', nC, 'countries worldwide, icons, links OK');
 `, sandbox, { filename: 'budgettrip-test.js' });
