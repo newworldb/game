@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
-const files = ['config.js', 'data.js', 'core.js'];
+const files = ['config.js', 'data.js', 'picks.js', 'core.js'];
 const src = files.map(f => fs.readFileSync(path.join(__dirname, '..', 'js', f), 'utf8')).join('\n');
 const sandbox = { console, localStorage: { getItem: () => null, setItem: () => {} } };
 vm.createContext(sandbox);
@@ -98,5 +98,22 @@ assert(Links.forCategory('transport', bkk).includes('12go'), 'router transport')
 assert(Links.forCategory('act', bkk).includes('klook'), 'router act');
 assert(Links.forCategory('shopping', bkk) === null, 'no affiliate for shopping');
 
-console.log('BUDGETTRIP SMOKE TEST PASSED —', Object.keys(DESTS).length, 'destinations, estimates, expenses, planner, affiliate links (incl. restaurants) OK');
+// curated picks: every destination fully stocked with real places
+for (const k in DESTS){
+  const pk = PICKS[k];
+  assert(pk, k + ' has curated picks');
+  assert(pk.h.length === 3 && pk.a.length === 3 && pk.e.length === 3, k + ' has 3/3/3 picks');
+  const tiers = pk.h.map(h => h.tier).sort().join(',');
+  assert(tiers === 'budget,comfort,mid', k + ' hotel tiers cover all styles: ' + tiers);
+  for (const h of pk.h) assert(h.n && h.th && h.p > 0 && h.area, k + ' hotel fields');
+  for (const a of pk.a) assert(a.n && a.th && a.p >= 0, k + ' activity fields');
+  for (const e of pk.e) assert(e.n && e.th && e.area && e.p >= 1 && e.p <= 3, k + ' eat fields');
+}
+AFF.agoda_cid = '999001';
+const named = Links.hotelByName(bkk, PICKS.bangkok.h[1].n);
+assert(named.includes('agoda.com') && named.includes('cid=999001') && named.includes('Novotel'), 'named hotel link: ' + named);
+assert(Links.actByName(PICKS.phuket.a[0].n).includes('klook.com'), 'named activity link');
+assert(Links.placeMap(PICKS.bangkok.e[2].n, bkk).includes('google.com/maps'), 'restaurant map link');
+
+console.log('BUDGETTRIP SMOKE TEST PASSED —', Object.keys(DESTS).length, 'destinations, 108 curated picks, estimates, planner, affiliate links OK');
 `, sandbox, { filename: 'budgettrip-test.js' });

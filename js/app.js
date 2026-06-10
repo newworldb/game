@@ -349,9 +349,42 @@ const App = {
     return w;
   },
 
+  pickName(x){ return Core.state.lang === 'th' ? (x.th || x.n) : x.n; },
+
   tabBook(trip){
     const w = App.el('<div></div>');
-    w.appendChild(App.el('<h2 class="sect">' + App.t('bestPicks') + '</h2>'));
+    const picks = PICKS[trip.dest];
+    if (picks){
+      // hotels: the tier matching this trip's style first
+      const tierRank = t => (t === trip.style ? 0 : 1);
+      const hotels = picks.h.slice().sort((a, b) => tierRank(a.tier) - tierRank(b.tier));
+      w.appendChild(App.el('<h2 class="sect">🏨 ' + App.t('recHotels') + '</h2>'));
+      for (const h of hotels){
+        const fits = h.tier === trip.style;
+        const r = App.el('<a class="pickrow" target="_blank" rel="noopener sponsored" href="' + Links.hotelByName(trip, h.n) + '">' +
+          '<div class="grow"><b>' + App.pickName(h) + '</b>' + (fits ? ' <span class="bestbadge">★ ' + App.t('fitsPlan') + '</span>' : '') +
+          '<div class="sub">' + h.area + ' · ' + App.t('approxFrom') + ' ' + Core.fmt(h.p) + App.t('perNight') + '</div></div>' +
+          '<span class="pk-btn agoda">' + App.t('bookBtn') + ' ↗</span></a>');
+        w.appendChild(r);
+      }
+      w.appendChild(App.el('<h2 class="sect">🎟️ ' + App.t('topActs') + '</h2>'));
+      for (const a of picks.a){
+        const r = App.el('<a class="pickrow" target="_blank" rel="noopener sponsored" href="' + Links.actByName(a.n) + '">' +
+          '<div class="grow"><b>' + App.pickName(a) + '</b>' +
+          '<div class="sub">' + (a.p > 0 ? App.t('approxFrom') + ' ' + Core.fmt(a.p) + '/' + (Core.state.lang === 'th' ? 'คน' : 'pax') : App.t('freeEntry')) + '</div></div>' +
+          '<span class="pk-btn klook">' + App.t('bookBtn') + ' ↗</span></a>');
+        w.appendChild(r);
+      }
+      w.appendChild(App.el('<h2 class="sect">🍜 ' + App.t('mustEat') + '</h2>'));
+      for (const e2 of picks.e){
+        const r = App.el('<a class="pickrow" target="_blank" rel="noopener" href="' + Links.placeMap(e2.n, trip) + '">' +
+          '<div class="grow"><b>' + App.pickName(e2) + '</b>' +
+          '<div class="sub">' + e2.area + ' · ' + '฿'.repeat(e2.p) + '</div></div>' +
+          '<span class="pk-btn map">' + App.t('mapBtn') + ' ↗</span></a>');
+        w.appendChild(r);
+      }
+    }
+    w.appendChild(App.el('<h2 class="sect">' + App.t('morePartners') + '</h2>'));
     w.appendChild(App.el('<div class="sub" style="margin:-4px 2px 10px">' + App.t('sortedNote') + '</div>'));
 
     // one offer group per category, ranked by this trip's budget weight

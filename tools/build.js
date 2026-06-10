@@ -5,7 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const ORDER = ['config.js', 'data.js', 'core.js', 'app.js'];
+const ORDER = ['config.js', 'data.js', 'picks.js', 'core.js', 'app.js'];
 const src = ORDER.map(f => {
   const body = fs.readFileSync(path.join(__dirname, '..', 'js', f), 'utf8');
   return '/* ===== ' + f + ' ===== */\n' + body.replace(/^'use strict';\n/, '');

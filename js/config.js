@@ -80,6 +80,24 @@ const Links = {
     return u;
   },
 
+  // deep links to a specific named place
+  hotelByName(trip, name){
+    let u = 'https://www.agoda.com/search?textSearch=' + Links.enc(name) +
+      '&adults=' + trip.people + '&rooms=' + Core.rooms(trip.people) + '&los=' + trip.nights;
+    if (trip.start) u += '&checkIn=' + trip.start;
+    if (AFF.agoda_cid) u += '&cid=' + AFF.agoda_cid;
+    return u;
+  },
+  actByName(name){
+    let u = 'https://www.klook.com/search/result/?query=' + Links.enc(name);
+    if (AFF.klook_aid) u += '&aid=' + AFF.klook_aid;
+    return u;
+  },
+  placeMap(name, trip){
+    const d = Core.dest(trip);
+    return 'https://www.google.com/maps/search/' + Links.enc(name + ' ' + d.en + ' Thailand');
+  },
+
   // best affiliate for a budget category, with trip context
   forCategory(cat, trip){
     if (cat === 'accom') return Links.hotelAgoda(trip);

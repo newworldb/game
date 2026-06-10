@@ -78,6 +78,9 @@ const I18N = {
     bookFood2: 'Restaurant packages (Hungry Hub)',
     bookFood2Desc: 'Set menus & all-you-can-eat at fixed net prices',
     sortedNote: 'Sorted by where your money goes in this plan',
+    recHotels: 'Recommended hotels', topActs: 'Top things to do', mustEat: 'Where locals eat',
+    perNight: '/night', approxFrom: 'approx from', fitsPlan: 'fits your plan', freeEntry: 'free',
+    mapBtn: 'Map', bookBtn: 'Book', morePartners: 'Search everything yourself',
   },
   th: {
     tagline: 'วางแผนงบเที่ยวไทยใน 30 วินาที',
@@ -117,5 +120,8 @@ const I18N = {
     bookFood2: 'แพ็กเกจร้านอาหาร (Hungry Hub)',
     bookFood2Desc: 'เซ็ตเมนู / บุฟเฟ่ต์ ราคาเหมาจ่ายชัดเจน',
     sortedNote: 'เรียงตามหมวดที่ใช้เงินเยอะสุดในแผนของคุณ',
+    recHotels: 'โรงแรมแนะนำ', topActs: 'กิจกรรมยอดฮิต', mustEat: 'ร้านเด็ดต้องลอง',
+    perNight: '/คืน', approxFrom: 'เริ่ม ~', fitsPlan: 'เหมาะกับแผนคุณ', freeEntry: 'ฟรี',
+    mapBtn: 'แผนที่', bookBtn: 'จอง', morePartners: 'ค้นหาเองทั้งหมด',
   },
 };
