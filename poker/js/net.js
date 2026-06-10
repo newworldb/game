@@ -32,6 +32,7 @@ const Net = {
 
   // ---------- host ----------
   host(name){
+    if (typeof Peer === 'undefined'){ UI.toast('Connection library failed to load — reload the page'); return; }
     Net.room = Net.code();
     Net.isHost = true;
     UI.toast('Creating room…');
@@ -148,6 +149,7 @@ const Net = {
 
   // ---------- guest ----------
   join(room, name){
+    if (typeof Peer === 'undefined'){ UI.toast('Connection library failed to load — reload the page'); return; }
     Net.room = room;
     Net.guestMode = true;
     Net.setupMode = false;

@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0c1220">
 <title>Tiny Poker — No-Limit Hold'em</title>
-<link rel="stylesheet" href="css/style.css?v=11">
+<link rel="stylesheet" href="css/style.css?v=12">
 </head>
 <body>
 
@@ -60,13 +60,18 @@
 
 <div id="toast" class="hidden"></div>
 
-<script src="js/cards.js?v=11"></script>
-<script src="js/ai.js?v=11"></script>
-<script src="js/engine.js?v=11"></script>
-<script src="js/save.js?v=11"></script>
-<script src="js/ui.js?v=11"></script>
 <script src="js/lib/peerjs.min.js"></script>
-<script src="js/net.js?v=11"></script>
-<script src="js/main.js?v=11"></script>
+<script src="js/bundle.js?v=12"></script>
+<script>
+// the free CDN occasionally drops a script request — offer a clean retry
+window.addEventListener('load', function(){
+  if (typeof Engine === 'undefined' || typeof UI === 'undefined'){
+    document.body.innerHTML =
+      '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:16px;font-family:system-ui">' +
+      '<div style="font-size:40px">🃏</div><div style="color:#94a3b8">Network hiccup while loading the table…</div>' +
+      '<button onclick="location.reload()" style="background:#3b82f6;color:#fff;border:none;border-radius:12px;padding:14px 28px;font-size:16px;font-weight:700">Tap to retry</button></div>';
+  }
+});
+</script>
 </body>
 </html>

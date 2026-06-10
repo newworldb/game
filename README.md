@@ -57,6 +57,7 @@ node transport/test/smoke.js    # transport game logic
 ```
 
 Poker UI lives in `poker/js/ui.js`, `poker/js/save.js`, `poker/js/main.js`.
-When changing JS/CSS, bump the `?v=N` query in `poker/index.html` so CDN
-caches (githack) pick up HTML + scripts atomically.
+After editing any `poker/js/*.js` file, regenerate the single-request
+bundle with `node tools/build.js` (the deploy CDN rate-limits parallel
+script requests, so the page loads one `bundle.js`).
 See `transport/README.md` for the transport game's docs.
