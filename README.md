@@ -1,14 +1,17 @@
-# Tiny Arcade 🕹️
+# Tiny Poker 🃏
 
-Little games built for your phone — pure vanilla JavaScript, no dependencies,
-no build step, everything saves locally in your browser.
+Mobile-first **No-Limit Texas Hold'em** for the browser — pure vanilla
+JavaScript, no dependencies, no build step, everything saves locally.
 
-| Game | Path | What it is |
-|------|------|------------|
-| 🃏 **Tiny Poker** | [`/poker/`](poker/) | No-Limit Texas Hold'em vs 4 AI bots |
-| 🚆 **Tiny Transport** | [`/transport/`](transport/) | 3D transport tycoon with living towns |
+The root `index.html` is the casino lobby with two ways to play:
 
-The root `index.html` is the arcade front page linking both games.
+| Mode | Link | Rules |
+|------|------|-------|
+| 💵 **Cash game** | `poker/?mode=cash` | Blinds $10/$20, sit with your bankroll, rebuy when busted |
+| 🏆 **Sit & Go tournament** | `poker/?mode=tourney` | $200 buy-in, 1,500 chips, blinds up every 6 hands, no rebuys, top 3 of 5 paid $600/$300/$100 |
+
+(The repo also still contains the older Tiny Transport game under
+`/transport/`, unlinked from the site.)
 
 ## Play
 
@@ -20,7 +23,7 @@ npx serve .
 python3 -m http.server 8000
 ```
 
-## Tiny Poker features
+## Features
 
 - **Full NLHE rules** — blinds, dealer button rotation, min-raise tracking,
   all-ins with **correct side pots**, split pots, showdown ordering.
@@ -30,14 +33,16 @@ python3 -m http.server 8000
 - **Touch-friendly table UI** — green felt, card animations, dealer chip,
   bet chips, turn highlight, winner glow, raise slider with Min / ½ Pot /
   Pot / All-in shortcuts.
-- **Persistence** — bankroll, hands played/won and biggest pot are kept in
-  `localStorage`; bust and you get a fresh $2,000 stack.
+- **Tournament mode** — rising blind levels, eliminations with final
+  placements, prize payouts into your bankroll, titles tracked.
+- **Persistence** — bankroll, hands played/won, biggest pot, tournaments and
+  titles are kept in `localStorage`.
 
 ## Development
 
 The poker engine is DOM-free (`poker/js/cards.js`, `ai.js`, `engine.js`) and covered
-by a headless test that checks the hand evaluator and simulates 300 full
-bot-vs-bot hands verifying chip conservation:
+by a headless test that checks the hand evaluator, simulates 300 cash hands
+and 20 complete tournaments, and verifies chip conservation throughout:
 
 ```bash
 node poker/test/poker-smoke.js  # poker engine + evaluator

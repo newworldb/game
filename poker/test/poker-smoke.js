@@ -70,8 +70,30 @@ Engine.init(2000);
     Engine.hooks.handEnd();
   }
   assert(potsAwarded === hands, 'every hand awarded a pot (' + potsAwarded + '/' + hands + ')');
-  const showdowns = hands; // sanity output only
-  console.log('POKER SMOKE TEST PASSED —', hands, 'hands, chips conserved, evaluator OK');
+  console.log('cash OK —', hands, 'hands, chips conserved');
+
+  // ---- tournament simulation: run 20 full Sit & Gos to completion ----
+  for (let t = 0; t < 20; t++){
+    Engine.init(0, 'tourney');
+    const tg = ++Engine.gen;
+    let blindsRose = false, th = 0;
+    while (Engine.seats.filter(p => !p.out).length > 1){
+      const res = await Engine.playHand(tg);
+      if (res === 'aborted') throw new Error('tourney abort');
+      Engine.processEliminations();
+      const sum = Engine.seats.reduce((a, p) => a + p.stack + p.total, 0);
+      assert(sum === 5 * Engine.TOURNEY_STACK, 'tourney chips conserved, got ' + sum);
+      if (Engine.cfg.BB > 20) blindsRose = true;
+      if (++th > 2000) throw new Error('tournament never ended');
+    }
+    const champ = Engine.seats.filter(p => !p.out);
+    assert(champ.length === 1, 'exactly one champion');
+    assert(champ[0].stack === 5 * Engine.TOURNEY_STACK, 'champion holds all chips');
+    const finishes = Engine.seats.filter(p => p.out).map(p => p.finish);
+    assert(finishes.every(f => f >= 2 && f <= 5), 'eliminated players have placements 2..5');
+    if (th > 6) assert(blindsRose, 'blinds escalated');
+  }
+  console.log('POKER SMOKE TEST PASSED — cash + 20 tournaments, chips conserved, evaluator OK');
 })().catch(e => { console.error(e); process.exit(1); });
 `;
 vm.runInContext(test, sandbox, { filename: 'poker-test.js' });

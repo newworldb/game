@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#123524">
-<meta name="description" content="Tiny Arcade — Hold'em poker and a 3D transport tycoon, right in your browser.">
-<title>Tiny Arcade</title>
+<meta name="description" content="Tiny Poker — No-Limit Texas Hold'em in your browser. Cash games and Sit & Go tournaments.">
+<title>Tiny Poker</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{min-height:100%;}
@@ -21,7 +21,7 @@ body{
 
 /* casino plaque header */
 header{
-  text-align:center;margin-bottom:30px;padding:16px 34px;
+  text-align:center;margin-bottom:30px;padding:16px 38px;
   border:3px double #d4af37;border-radius:10px;
   background:linear-gradient(#173f2b,#10311f);
   box-shadow:0 6px 24px rgba(0,0,0,.45), inset 0 0 18px rgba(0,0,0,.35);
@@ -34,6 +34,7 @@ h1{
 .suits{margin-top:6px;font-size:15px;letter-spacing:10px;}
 .suits .r{color:#e06c6c;} .suits .b{color:#cfd6cd;}
 .tag{margin-top:6px;font-size:13px;font-style:italic;color:#b9cdb4;letter-spacing:1px;}
+.bank{margin-top:8px;font-size:14px;color:#e8c558;letter-spacing:1px;}
 
 /* dealt cards */
 main{display:flex;flex-direction:column;gap:30px;width:100%;max-width:400px;align-items:center;}
@@ -58,7 +59,7 @@ main{display:flex;flex-direction:column;gap:30px;width:100%;max-width:400px;alig
 .pip.red{color:#c0303a;} .pip.blk{color:#1c2430;}
 
 .shot{
-  border:2px solid #1c2430;border-radius:8px;overflow:hidden;height:210px;
+  border:2px solid #1c2430;border-radius:8px;overflow:hidden;height:200px;
   box-shadow:inset 0 0 12px rgba(0,0,0,.3);
 }
 .pcard.red-card .shot{border-color:#c0303a;}
@@ -71,7 +72,11 @@ main{display:flex;flex-direction:column;gap:30px;width:100%;max-width:400px;alig
 .pcard.red-card h2{color:#c0303a;}
 .pcard p{
   text-align:center;color:#4a4436;font-size:13.5px;line-height:1.5;font-style:italic;
-  min-height:60px;margin-bottom:12px;
+  min-height:62px;margin-bottom:6px;
+}
+.terms{
+  text-align:center;font-size:11.5px;color:#8a8068;letter-spacing:.5px;margin-bottom:12px;
+  font-variant:small-caps;
 }
 
 /* casino chip button */
@@ -97,38 +102,52 @@ footer a{color:#e8c558;}
 <body>
 
 <header>
-  <h1>Tiny Arcade</h1>
+  <h1>Tiny Poker</h1>
   <div class="suits"><span class="b">♠</span><span class="r">♥</span><span class="b">♣</span><span class="r">♦</span></div>
-  <div class="tag">two games · open all night · the house never wins</div>
+  <div class="tag">no-limit texas hold'em · open all night</div>
+  <div class="bank" id="bank"></div>
 </header>
 
 <main>
-  <a class="pcard" href="poker/">
+  <a class="pcard" href="poker/?mode=cash">
     <span class="pip tl blk"><span class="rk">A</span><span class="st">♠</span></span>
     <span class="pip br blk"><span class="rk">A</span><span class="st">♠</span></span>
-    <div class="shot"><img src="assets/poker.png" alt="Tiny Poker — a hold'em table mid-hand"></div>
-    <h2>Tiny Poker</h2>
-    <p>No-Limit Texas Hold'em against four regulars who never sleep.
-       Rocco bluffs too much. Viktor never does. Side pots settled to the chip.</p>
+    <div class="shot"><img src="assets/poker.png" alt="A hold'em cash game table mid-hand"></div>
+    <h2>Cash Game</h2>
+    <p>Sit down with your bankroll against four regulars who never sleep.
+       Rocco bluffs too much. Viktor never does. Leave whenever you like.</p>
+    <div class="terms">blinds $10 / $20 · rebuy when busted</div>
     <span class="chipbtn blk">♠ Take a Seat</span>
   </a>
 
-  <a class="pcard right red-card" href="transport/">
-    <span class="pip tl red"><span class="rk">K</span><span class="st">♦</span></span>
-    <span class="pip br red"><span class="rk">K</span><span class="st">♦</span></span>
-    <div class="shot"><img src="assets/transport.png" alt="Tiny Transport — a 3D town with roads and a bus"></div>
-    <h2>Tiny Transport</h2>
-    <p>Cash out your winnings and build an empire — roads, rails and bus lines
-       across a living 3D island, with little people riding every route.</p>
-    <span class="chipbtn red">♦ Start Building</span>
+  <a class="pcard right red-card" href="poker/?mode=tourney">
+    <span class="pip tl red"><span class="rk">K</span><span class="st">♥</span></span>
+    <span class="pip br red"><span class="rk">K</span><span class="st">♥</span></span>
+    <div class="shot"><img src="assets/tourney.png" alt="A Sit &amp; Go tournament table"></div>
+    <h2>Tournament</h2>
+    <p>A five-handed Sit &amp; Go. The blinds rise every six hands, there are
+       no rebuys, and the last chip standing takes the crown.</p>
+    <div class="terms">$200 buy-in · prizes $600 / $300 / $100</div>
+    <span class="chipbtn red">♥ Enter the Sit &amp; Go</span>
   </a>
 </main>
 
 <footer>
   <div class="rule">· · ♠ ♥ ♣ ♦ · ·</div>
-  plays in your browser — saves locally — no ads, no accounts<br>
+  plays in your browser — bankroll saves locally — no ads, no accounts<br>
   <a href="https://github.com/newworldb/game">source on github</a>
 </footer>
+
+<script>
+try {
+  const d = JSON.parse(localStorage.getItem('tinypoker-v1'));
+  if (d && typeof d.bank === 'number'){
+    const s = d.stats || {};
+    document.getElementById('bank').textContent =
+      'bankroll $' + d.bank + (s.titles ? ' · 🏆 × ' + s.titles : '');
+  }
+} catch (e) { /* fresh visitor */ }
+</script>
 
 </body>
 </html>

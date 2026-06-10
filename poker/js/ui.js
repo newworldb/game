@@ -111,8 +111,14 @@ const UI = {
 
   update(){
     const e = UI.els;
-    e.handNo.textContent = Engine.handNo ? 'Hand #' + Engine.handNo : '';
-    e.blinds.textContent = 'Blinds ' + Engine.cfg.SB + '/' + Engine.cfg.BB;
+    if (Engine.mode === 'tourney'){
+      const left = Engine.seated().length;
+      e.blinds.textContent = 'Lvl ' + (Engine.level() + 1) + ' · ' + Engine.cfg.SB + '/' + Engine.cfg.BB;
+      e.handNo.textContent = (Engine.handNo ? 'Hand #' + Engine.handNo + ' · ' : '') + left + ' left';
+    } else {
+      e.blinds.textContent = 'Blinds ' + Engine.cfg.SB + '/' + Engine.cfg.BB;
+      e.handNo.textContent = Engine.handNo ? 'Hand #' + Engine.handNo : '';
+    }
     // pot + board
     const pot = Engine.pot();
     e.pot.textContent = pot > 0 ? 'Pot  $' + pot : '';
@@ -125,7 +131,7 @@ const UI = {
       const pos = UI.SEAT_POS[i] || UI.SEAT_POS[0];
       const d = document.createElement('div');
       d.className = 'seat' + (p.isHuman ? ' hero' : '') +
-        (p.folded ? ' folded' : '') + (p.turn ? ' turn' : '') + (p.winAmt > 0 ? ' winner' : '');
+        ((p.folded || p.out) ? ' folded' : '') + (p.turn ? ' turn' : '') + (p.winAmt > 0 ? ' winner' : '');
       d.style.left = pos.x + '%';
       d.style.top = pos.y + '%';
 
@@ -156,7 +162,7 @@ const UI = {
       d.appendChild(nm);
       const stk = document.createElement('div');
       stk.className = 'stk';
-      stk.textContent = '$' + p.stack;
+      stk.textContent = p.out ? '—' : '$' + p.stack;
       d.appendChild(stk);
       if (p.isHuman && Engine.button === i){
         const db = document.createElement('div');
@@ -170,7 +176,8 @@ const UI = {
 
       const act = document.createElement('div');
       act.className = 'act';
-      act.textContent = p.allin && !p.folded ? 'ALL-IN' : (p.lastAction || '');
+      act.textContent = p.out ? 'OUT · ' + Engine.place(p.finish)
+        : (p.allin && !p.folded ? 'ALL-IN' : (p.lastAction || ''));
       d.appendChild(act);
 
       if (p.bet > 0){
@@ -229,12 +236,20 @@ const UI = {
   },
 
   showMenu(){
-    const b = UI.openPanel('☰ Tiny Poker');
+    const b = UI.openPanel(Engine.mode === 'tourney' ? '☰ Sit & Go' : '☰ Cash Game');
     const st = Save.data.stats;
-    b.appendChild(UI.row('<div class="grow">Bankroll</div><b style="color:#86efac">$' + Engine.human().stack + '</b>'));
+    if (Engine.mode === 'tourney'){
+      b.appendChild(UI.row('<div class="grow">Tournament chips</div><b style="color:#86efac">$' + Engine.human().stack + '</b>'));
+      b.appendChild(UI.row('<div class="grow">Bankroll (outside)</div><div>$' + Save.data.bank + '</div>'));
+      b.appendChild(UI.row('<div class="grow">Players left</div><div>' + Engine.seated().length + ' / 5</div>'));
+      b.appendChild(UI.row('<div class="grow">Payouts</div><div>$' + Engine.PRIZES.join(' / $') + '</div>'));
+    } else {
+      b.appendChild(UI.row('<div class="grow">Bankroll</div><b style="color:#86efac">$' + Engine.human().stack + '</b>'));
+    }
     b.appendChild(UI.row('<div class="grow">Hands played</div><div>' + st.hands + '</div>'));
     b.appendChild(UI.row('<div class="grow">Hands won</div><div>' + st.wins + '</div>'));
     b.appendChild(UI.row('<div class="grow">Biggest pot won</div><div>$' + st.biggest + '</div>'));
+    b.appendChild(UI.row('<div class="grow">Tournaments / titles</div><div>' + (st.tourneys || 0) + ' / 🏆' + (st.titles || 0) + '</div>'));
     const mk = (label, cls, fn) => {
       const r = UI.row('<button class="btn ' + cls + '" style="width:100%">' + label + '</button>');
       r.querySelector('button').onclick = fn;
@@ -242,25 +257,45 @@ const UI = {
       return r.querySelector('button');
     };
     mk('❓ How to play', 'gray', () => UI.showHelp());
-    const nb = mk('🔄 New table (reset all stacks)', 'red', () => {
-      if (nb.dataset.armed){
-        Save.data.bank = Engine.cfg.STACK;
-        Save.save();
-        Engine.init(Engine.cfg.STACK);
-        Engine.start();
-        UI.closePanel();
-        UI.toast('Fresh table — good luck!');
-      } else {
-        nb.dataset.armed = '1';
-        nb.textContent = 'Tap to confirm';
-      }
-    });
-    const r = UI.row('<button class="btn gray" style="width:100%">🚆 Play Tiny Transport (our other game)</button>');
-    r.querySelector('button').onclick = () => { location.href = '../transport/'; };
-    b.appendChild(r);
-    const r2 = UI.row('<button class="btn gray" style="width:100%">🕹️ Arcade home</button>');
-    r2.querySelector('button').onclick = () => { location.href = '../'; };
-    b.appendChild(r2);
+    if (Engine.mode === 'tourney'){
+      const ab = mk('🚪 Abandon tournament (no refund)', 'red', () => {
+        if (ab.dataset.armed) location.href = '../';
+        else { ab.dataset.armed = '1'; ab.textContent = 'Tap to confirm'; }
+      });
+    } else {
+      const nb = mk('🔄 New table (reset all stacks)', 'red', () => {
+        if (nb.dataset.armed){
+          Save.data.bank = Engine.cfg.STACK;
+          Save.save();
+          Engine.init(Engine.cfg.STACK, 'cash');
+          Engine.start();
+          UI.closePanel();
+          UI.toast('Fresh table — good luck!');
+        } else {
+          nb.dataset.armed = '1';
+          nb.textContent = 'Tap to confirm';
+        }
+      });
+    }
+    mk('🃏 Back to lobby', 'gray', () => { location.href = '../'; });
+  },
+
+  tourneyEnd(place, prize){
+    const b = UI.openPanel('🏆 Tournament over');
+    const medal = place === 1 ? '🥇' : place === 2 ? '🥈' : place === 3 ? '🥉' : '💀';
+    b.appendChild(UI.row('<div class="grow" style="font-size:18px">' + medal + ' You finished <b>' +
+      Engine.place(place) + '</b> of 5</div>'));
+    b.appendChild(UI.row('<div class="grow">Prize</div><b style="color:' + (prize > 0 ? '#86efac' : '#f87171') + '">' +
+      (prize > 0 ? '+$' + prize : '—') + '</b>'));
+    b.appendChild(UI.row('<div class="grow">Bankroll</div><div>$' + Save.data.bank + '</div>'));
+    const mk = (label, cls, fn) => {
+      const r = UI.row('<button class="btn ' + cls + '" style="width:100%">' + label + '</button>');
+      r.querySelector('button').onclick = fn;
+      b.appendChild(r);
+    };
+    mk('🔁 Play another Sit & Go ($' + Engine.BUYIN + ')', '', () => { location.href = '?mode=tourney'; });
+    mk('💵 Switch to cash game', 'gray', () => { location.href = '?mode=cash'; });
+    mk('🃏 Back to lobby', 'gray', () => { location.href = '../'; });
   },
 
   showHelp(){
@@ -268,7 +303,9 @@ const UI = {
     const d = document.createElement('div');
     d.className = 'help';
     d.innerHTML =
-      '<p><b>No-Limit Texas Hold\'em</b> against four bots. Blinds are $10/$20 and everyone starts with $2,000. Bust and you get a fresh stack — your bankroll is saved in your browser.</p>' +
+      '<p><b>No-Limit Texas Hold\'em</b> against four bots, two ways to play:</p>' +
+      '<p><b>💵 Cash game:</b> blinds stay $10/$20, you sit with your bankroll, leave anytime. Bust and you get a fresh $2,000.</p>' +
+      '<p><b>🏆 Sit & Go tournament:</b> $200 buy-in, everyone starts with $1,500 in chips, blinds rise every 6 hands. No rebuys — lose your chips and you\'re out. Top 3 of 5 are paid: $600 / $300 / $100.</p>' +
       '<p><b>Each hand:</b> you get 2 hole cards. Five community cards arrive on the flop (3), turn (1) and river (1). The best 5-card hand from your 7 wins.</p>' +
       '<p><b>Your turn:</b> Fold, Check/Call, or Bet/Raise. The raise panel has a slider plus Min, ½ Pot, Pot and All-in shortcuts.</p>' +
       '<p><b>Hand ranks</b> (high → low): Royal/Straight Flush, Four of a Kind, Full House, Flush, Straight, Three of a Kind, Two Pair, Pair, High Card.</p>' +

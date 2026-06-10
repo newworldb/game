@@ -5,6 +5,13 @@
 // 'raise', to} where `to` is the total street bet to raise to.
 const Engine = {
   cfg: { SB: 10, BB: 20, STACK: 2000 },
+  mode: 'cash',                       // 'cash' | 'tourney'
+  TOURNEY_STACK: 1500,
+  BUYIN: 200,
+  PRIZES: [600, 300, 100],            // 1st / 2nd / 3rd of 5
+  LEVELS: [[10, 20], [15, 30], [25, 50], [40, 80], [60, 120], [100, 200], [150, 300], [250, 500], [400, 800], [600, 1200]],
+  LEVEL_HANDS: 6,                     // hands per blind level
+  tourneyHands: 0,
   seats: [],
   button: -1,
   board: [],
@@ -16,7 +23,7 @@ const Engine = {
   gen: 0,
   auto: false, // bots play the human seat too (tests)
   hooks: {
-    update(){}, log(){}, human: null, handStart(){}, handEnd(){},
+    update(){}, log(){}, human: null, handStart(){}, handEnd(){}, tourneyEnd(){},
     sleep: ms => new Promise(r => setTimeout(r, ms)),
   },
 
@@ -27,25 +34,38 @@ const Engine = {
     { name: 'Rocco', emoji: '🐗', tight: 0.85, aggr: 1.4 },
   ],
 
-  init(humanStack){
-    Engine.seats = [{
-      i: 0, name: 'You', emoji: '🙂', isHuman: true,
-      stack: humanStack || Engine.cfg.STACK,
-      tight: 1, aggr: 1,
+  init(humanStack, mode){
+    Engine.mode = mode === 'tourney' ? 'tourney' : 'cash';
+    Engine.tourneyHands = 0;
+    if (Engine.mode === 'cash'){ Engine.cfg.SB = 10; Engine.cfg.BB = 20; }
+    const startStack = Engine.mode === 'tourney' ? Engine.TOURNEY_STACK : (humanStack || Engine.cfg.STACK);
+    const seat = (i, name, emoji, isHuman, tight, aggr) => ({
+      i, name, emoji, isHuman,
+      stack: isHuman ? startStack : (Engine.mode === 'tourney' ? Engine.TOURNEY_STACK : Engine.cfg.STACK),
+      tight, aggr,
       cards: [], bet: 0, total: 0, folded: true, allin: false,
       acted: false, revealed: false, raises: 0, lastAction: '', winAmt: 0,
-    }];
-    Engine.BOTS.forEach((b, k) => {
-      Engine.seats.push({
-        i: k + 1, name: b.name, emoji: b.emoji, isHuman: false,
-        stack: Engine.cfg.STACK, tight: b.tight, aggr: b.aggr,
-        cards: [], bet: 0, total: 0, folded: true, allin: false,
-        acted: false, revealed: false, raises: 0, lastAction: '', winAmt: 0,
-      });
+      out: false, finish: 0,
     });
+    Engine.seats = [seat(0, 'You', '🙂', true, 1, 1)];
+    Engine.BOTS.forEach((b, k) => Engine.seats.push(seat(k + 1, b.name, b.emoji, false, b.tight, b.aggr)));
     Engine.button = -1;
     Engine.handNo = 0;
   },
+
+  level(){
+    return Math.min(Engine.LEVELS.length - 1, (Engine.tourneyHands / Engine.LEVEL_HANDS) | 0);
+  },
+  seated(){ return Engine.seats.filter(p => !p.out); },
+  nextSeated(i){
+    const n = Engine.seats.length;
+    for (let k = 1; k <= n; k++){
+      const j = (i + k) % n;
+      if (!Engine.seats[j].out) return j;
+    }
+    return i;
+  },
+  place(n){ return n + (n === 1 ? 'st' : n === 2 ? 'nd' : n === 3 ? 'rd' : 'th'); },
 
   pot(){ return Engine.seats.reduce((a, p) => a + p.total, 0); },
   active(){ return Engine.seats.filter(p => !p.folded); },
@@ -70,31 +90,66 @@ const Engine = {
     while (gen === Engine.gen){
       const res = await Engine.playHand(gen);
       if (res === 'aborted' || gen !== Engine.gen) return;
+      if (Engine.mode === 'tourney') Engine.processEliminations();
       Engine.hooks.handEnd();
+      if (Engine.mode === 'tourney'){
+        const human = Engine.human();
+        const remaining = Engine.seated().length;
+        if (human.out || remaining <= 1){
+          if (!human.out) human.finish = 1;
+          const placeN = human.finish || 1;
+          const prize = Engine.PRIZES[placeN - 1] || 0;
+          Engine.hooks.tourneyEnd(placeN, prize);
+          return;
+        }
+      }
       await Engine.hooks.sleep(2400);
+    }
+  },
+
+  processEliminations(){
+    const busted = Engine.seats.filter(p => !p.out && p.stack <= 0);
+    if (!busted.length) return;
+    const stillIn = Engine.seats.filter(p => !p.out && p.stack > 0).length;
+    for (const p of busted){
+      p.out = true;
+      p.finish = stillIn + busted.length;
+      Engine.hooks.log((p.isHuman ? 'You are' : p.name + ' is') + ' eliminated in ' + Engine.place(p.finish) + ' place');
     }
   },
 
   async playHand(gen){
     const H = Engine.hooks;
     Engine.handNo++;
-    for (const p of Engine.seats){
-      if (p.stack <= 0){
-        p.stack = Engine.cfg.STACK;
-        H.log((p.isHuman ? 'You receive' : p.name + ' receives') + ' a fresh $' + Engine.cfg.STACK + ' stack');
+    if (Engine.mode === 'cash'){
+      for (const p of Engine.seats){
+        if (p.stack <= 0){
+          p.stack = Engine.cfg.STACK;
+          H.log((p.isHuman ? 'You receive' : p.name + ' receives') + ' a fresh $' + Engine.cfg.STACK + ' stack');
+        }
       }
+    } else {
+      const lvl = Engine.level();
+      const prev = [Engine.cfg.SB, Engine.cfg.BB];
+      Engine.cfg.SB = Engine.LEVELS[lvl][0];
+      Engine.cfg.BB = Engine.LEVELS[lvl][1];
+      if (Engine.cfg.BB !== prev[1] && Engine.tourneyHands > 0)
+        H.log('Blinds up! Now ' + Engine.cfg.SB + '/' + Engine.cfg.BB);
+      Engine.tourneyHands++;
+    }
+    for (const p of Engine.seats){
       p.cards = []; p.bet = 0; p.total = 0;
-      p.folded = false; p.allin = false; p.acted = false;
+      p.folded = !!p.out; p.allin = false; p.acted = false;
       p.revealed = false; p.raises = 0; p.lastAction = ''; p.winAmt = 0;
     }
     H.handStart();
     Engine.board = [];
     Engine.deck = Cards.deck();
-    const n = Engine.seats.length;
-    Engine.button = (Engine.button + 1) % n;
-    const next = i => (i + 1) % n;
+    const seated = Engine.seated();
+    Engine.button = Engine.nextSeated(Engine.button);
+    const next = i => Engine.nextSeated(i);
     let sb, bb;
-    if (n === 2){ sb = Engine.button; bb = next(sb); }
+    if (seated.length === 2){ sb = Engine.button; bb = next(sb); }
     else { sb = next(Engine.button); bb = next(sb); }
     Engine.postBet(Engine.seats[sb], Engine.cfg.SB);
     Engine.seats[sb].lastAction = 'SB ' + Engine.seats[sb].bet;
@@ -102,7 +157,7 @@ const Engine = {
     Engine.seats[bb].lastAction = 'BB ' + Engine.seats[bb].bet;
     Engine.currentBet = Engine.cfg.BB;
     Engine.minRaise = Engine.cfg.BB;
-    for (const p of Engine.seats){ p.cards = [Engine.deck.pop(), Engine.deck.pop()]; }
+    for (const p of seated){ p.cards = [Engine.deck.pop(), Engine.deck.pop()]; }
     Engine.street = 'preflop';
     H.update();
     await H.sleep(500);
