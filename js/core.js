@@ -45,6 +45,30 @@ const Core = {
     return b;
   },
 
+  // longest affordable stay at a destination for a given budget
+  maxNightsFor(destKey, style, people, budgetTHB, inclFlights){
+    let best = null;
+    for (let n = 1; n <= 21; n++){
+      const est = Core.estimate(destKey, style, n, people, inclFlights);
+      const t = Core.total(est);
+      if (t <= budgetTHB) best = { nights: n, total: t };
+      else break; // totals grow with nights
+    }
+    return best;
+  },
+
+  // "I have ฿X — where can I go?": best option per destination, sorted
+  planOptions(budgetTHB, people, style, inclFlights){
+    const opts = [];
+    for (const k in DESTS){
+      const fl = !!(inclFlights && DESTS[k].flight);
+      const r = Core.maxNightsFor(k, style, people, budgetTHB, fl);
+      if (r) opts.push({ dest: k, style, nights: r.nights, total: r.total, left: budgetTHB - r.total, inclFlights: fl });
+    }
+    opts.sort((a, b) => b.nights - a.nights || a.total - b.total);
+    return opts;
+  },
+
   total(budget){
     let t = 0;
     for (const c of CATS) t += budget[c.id] || 0;

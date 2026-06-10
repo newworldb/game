@@ -71,5 +71,18 @@ assert(f.includes('trip.com') && f.includes('Allianceid=555005') && f.includes('
 AFF.agoda_cid = '';
 assert(!Links.hotelAgoda(trip).includes('cid='), 'no empty cid param');
 
-console.log('BUDGETTRIP SMOKE TEST PASSED —', Object.keys(DESTS).length, 'destinations, estimates, expenses, affiliate links OK');
+// budget-first planner
+const plans = Core.planOptions(10000, 2, 'mid', false);
+assert(plans.length > 0, 'plans found for 10k/2p');
+for (const o of plans) assert(o.total <= 10000 && o.left >= 0, 'plan fits budget: ' + JSON.stringify(o));
+for (let i = 1; i < plans.length; i++)
+  assert(plans[i - 1].nights >= plans[i].nights, 'plans sorted by nights');
+const rich = Core.planOptions(60000, 2, 'mid', false);
+assert(rich[0].nights > plans[0].nights, 'bigger budget buys more nights');
+assert(Core.planOptions(500, 2, 'comfort', false).length === 0, 'tiny budget finds nothing premium');
+const withFl = Core.planOptions(20000, 2, 'mid', true).find(o => o.dest === 'chiangmai');
+const noFl = Core.planOptions(20000, 2, 'mid', false).find(o => o.dest === 'chiangmai');
+assert(withFl && noFl && withFl.nights <= noFl.nights, 'flights eat into nights');
+
+console.log('BUDGETTRIP SMOKE TEST PASSED —', Object.keys(DESTS).length, 'destinations, estimates, expenses, planner, affiliate links OK');
 `, sandbox, { filename: 'budgettrip-test.js' });

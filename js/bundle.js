@@ -126,6 +126,13 @@ const I18N = {
     share: 'Share', deleteTrip: 'Delete trip', confirm: 'Tap again to confirm',
     over: 'over budget', daysLeft: 'nights', open: 'Open',
     sharedWith: 'planned with BudgetTrip',
+    planBtn: '💰 I have a budget — plan for me',
+    planTitle: 'How much do you have?',
+    yourBudget: 'Your budget (฿)',
+    planResults: 'With this budget you can go…',
+    noFit: 'Budget too small for these settings — add more or switch style.',
+    pickPlan: 'Pick this plan',
+    left: 'left over',
   },
   th: {
     tagline: 'วางแผนงบเที่ยวไทยใน 30 วินาที',
@@ -150,6 +157,13 @@ const I18N = {
     share: 'แชร์', deleteTrip: 'ลบทริป', confirm: 'แตะอีกครั้งเพื่อยืนยัน',
     over: 'เกินงบ', daysLeft: 'คืน', open: 'เปิด',
     sharedWith: 'วางแผนด้วย BudgetTrip',
+    planBtn: '💰 มีตังเท่านี้ ให้แอพวางแผน',
+    planTitle: 'มีงบเท่าไหร่?',
+    yourBudget: 'งบของคุณ (฿)',
+    planResults: 'งบนี้ไปได้เลย…',
+    noFit: 'งบยังไม่พอสำหรับเงื่อนไขนี้ — ลองเพิ่มงบหรือเปลี่ยนสไตล์ดูนะ',
+    pickPlan: 'เลือกแผนนี้',
+    left: 'เหลือ',
   },
 };
 
@@ -198,6 +212,30 @@ const Core = {
     };
     b.misc = Math.round(0.08 * (b.accom + b.food + b.transport + b.act));
     return b;
+  },
+
+  // longest affordable stay at a destination for a given budget
+  maxNightsFor(destKey, style, people, budgetTHB, inclFlights){
+    let best = null;
+    for (let n = 1; n <= 21; n++){
+      const est = Core.estimate(destKey, style, n, people, inclFlights);
+      const t = Core.total(est);
+      if (t <= budgetTHB) best = { nights: n, total: t };
+      else break; // totals grow with nights
+    }
+    return best;
+  },
+
+  // "I have ฿X — where can I go?": best option per destination, sorted
+  planOptions(budgetTHB, people, style, inclFlights){
+    const opts = [];
+    for (const k in DESTS){
+      const fl = !!(inclFlights && DESTS[k].flight);
+      const r = Core.maxNightsFor(k, style, people, budgetTHB, fl);
+      if (r) opts.push({ dest: k, style, nights: r.nights, total: r.total, left: budgetTHB - r.total, inclFlights: fl });
+    }
+    opts.sort((a, b) => b.nights - a.nights || a.total - b.total);
+    return opts;
   },
 
   total(budget){
@@ -285,6 +323,7 @@ const App = {
     const m = h.match(/^trip-(\d+)$/);
     if (m) return { view: 'trip', id: +m[1] };
     if (h === 'new') return { view: 'new' };
+    if (h === 'plan') return { view: 'plan' };
     return { view: 'home' };
   },
 
@@ -313,6 +352,7 @@ const App = {
     const root = document.getElementById('view');
     root.innerHTML = '';
     if (r.view === 'new') root.appendChild(App.viewNew());
+    else if (r.view === 'plan') root.appendChild(App.viewPlan());
     else if (r.view === 'trip'){
       const trip = Core.trip(r.id);
       if (trip) root.appendChild(App.viewTrip(trip));
@@ -327,6 +367,9 @@ const App = {
     const nb = App.el('<button class="bigbtn">' + App.t('newTrip') + '</button>');
     nb.onclick = () => App.go('new');
     w.appendChild(nb);
+    const pb = App.el('<button class="bigbtn plan">' + App.t('planBtn') + '</button>');
+    pb.onclick = () => App.go('plan');
+    w.appendChild(pb);
     w.appendChild(App.el('<h2 class="sect">' + App.t('myTrips') + '</h2>'));
     if (!Core.state.trips.length){
       w.appendChild(App.el('<div class="empty">🧳<br>' + App.t('noTrips') + '</div>'));
@@ -409,6 +452,77 @@ const App = {
       App.go('trip-' + trip.id);
     };
     w.appendChild(cb);
+    return w;
+  },
+
+  // ---------- budget-first planner ----------
+  planForm: { budget: 10000, people: 2, style: 'mid', inclFlights: false },
+
+  viewPlan(){
+    const f = App.planForm;
+    const w = App.el('<div></div>');
+    w.appendChild(App.el('<h2 class="sect">' + App.t('planTitle') + '</h2>'));
+
+    const br = App.el('<div class="row"><div class="grow">' + App.t('yourBudget') + '</div>' +
+      '<input class="amt" id="planAmt" inputmode="numeric" value="' + f.budget + '"></div>');
+    br.querySelector('input').onchange = e => {
+      f.budget = Math.max(0, parseInt(e.target.value.replace(/[^0-9]/g, ''), 10) || 0);
+      App.render();
+    };
+    w.appendChild(br);
+
+    const chips = App.el('<div class="catchips"></div>');
+    for (const v of [3000, 5000, 10000, 20000, 30000, 50000]){
+      const c = App.el('<button class="chip' + (f.budget === v ? ' on' : '') + '">฿' + (v / 1000) + 'k</button>');
+      c.onclick = () => { f.budget = v; App.render(); };
+      chips.appendChild(c);
+    }
+    w.appendChild(chips);
+
+    const pr = App.el('<div class="row"><div class="grow">' + App.t('people') + '</div>' +
+      '<button class="step">−</button><b class="stepval">' + f.people + '</b><button class="step">＋</button></div>');
+    const [mi, pl] = pr.querySelectorAll('.step');
+    mi.onclick = () => { f.people = Math.max(1, f.people - 1); App.render(); };
+    pl.onclick = () => { f.people = Math.min(10, f.people + 1); App.render(); };
+    w.appendChild(pr);
+
+    const seg = App.el('<div class="seg"></div>');
+    [['budget', 'sBudget', '🎒'], ['mid', 'sMid', '🧢'], ['comfort', 'sComfort', '🥂']].forEach(([k, lk, em]) => {
+      const b = App.el('<button class="' + (f.style === k ? 'on' : '') + '">' + em + ' ' + App.t(lk) + '</button>');
+      b.onclick = () => { f.style = k; App.render(); };
+      seg.appendChild(b);
+    });
+    w.appendChild(seg);
+
+    const fr = App.el('<div class="row"><div class="grow">' + App.t('inclFlights') + '</div>' +
+      '<input type="checkbox" class="chk" ' + (f.inclFlights ? 'checked' : '') + '></div>');
+    fr.querySelector('input').onchange = e => { f.inclFlights = e.target.checked; App.render(); };
+    w.appendChild(fr);
+
+    w.appendChild(App.el('<h2 class="sect">' + App.t('planResults') + '</h2>'));
+    const opts = f.budget > 0 ? Core.planOptions(f.budget, f.people, f.style, f.inclFlights) : [];
+    if (!opts.length){
+      w.appendChild(App.el('<div class="empty">🙈<br>' + App.t('noFit') + '</div>'));
+    }
+    for (const o of opts.slice(0, 10)){
+      const d = DESTS[o.dest];
+      const card = App.el(
+        '<div class="tripcard plancard"><div class="tc-head"><span class="tc-emoji">' + d.emoji + '</span>' +
+        '<div class="grow"><div class="tc-name">' + App.dname(d) + ' · ' + o.nights + ' ' + App.t('daysLeft') + '</div>' +
+        '<div class="tc-sub">' + Core.fmt(o.total) + ' · ' + App.t('left') + ' ' + Core.fmt(o.left) +
+        (o.inclFlights ? ' · ✈️' : '') + '</div></div>' +
+        '<span class="bk-go">' + App.t('pickPlan') + ' →</span></div></div>');
+      card.onclick = () => {
+        const trip = Core.newTrip({ dest: o.dest, style: o.style, nights: o.nights, people: f.people, start: '', inclFlights: o.inclFlights });
+        App.tab = 'budget';
+        App.toast(App.t('left') + ' ' + Core.fmt(o.left) + ' 🎉');
+        App.go('trip-' + trip.id);
+      };
+      w.appendChild(card);
+    }
+    const back = App.el('<button class="ghostb">←</button>');
+    back.onclick = () => App.go('home');
+    w.appendChild(back);
     return w;
   },
 

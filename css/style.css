@@ -18,6 +18,8 @@ header{display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 10
 .bigbtn{display:block;width:100%;background:linear-gradient(135deg,#11876f,#0e7461);color:#fff;border:none;border-radius:16px;
   padding:16px;font-size:17px;font-weight:800;box-shadow:0 6px 18px rgba(14,116,97,.3);margin:10px 0 4px;}
 .bigbtn:active{transform:translateY(1px);}
+.bigbtn.plan{background:linear-gradient(135deg,#e8932f,#d97b06);box-shadow:0 6px 18px rgba(217,123,6,.3);}
+.plancard{cursor:pointer;}
 .sect{font-size:15px;font-weight:800;margin:18px 2px 8px;color:#33433b;}
 .empty{text-align:center;color:#9aa69f;padding:34px 10px;font-size:14px;line-height:1.8;}
 
