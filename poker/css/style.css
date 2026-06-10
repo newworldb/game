@@ -6,7 +6,9 @@ button{font-family:inherit;cursor:pointer;}
 #topbar{position:fixed;top:0;left:0;right:0;display:flex;gap:10px;align-items:center;
   padding:calc(env(safe-area-inset-top) + 6px) 12px 6px;z-index:10;
   background:linear-gradient(#0c1220ee,#0c122000);}
-#btnMenu{background:#1e293b;color:#cbd5e1;border:1px solid #334155;border-radius:8px;padding:5px 10px;font-size:15px;}
+#btnMenu,#btnEye{background:#1e293b;color:#cbd5e1;border:1px solid #334155;border-radius:8px;padding:5px 10px;font-size:15px;}
+#btnEye.on{background:#b45309;border-color:#f59e0b;color:#fff;box-shadow:0 0 10px #f59e0b66;}
+.seat .hint{font-size:9px;color:#7dd3fc;font-weight:700;text-shadow:0 1px 2px #000;min-height:11px;}
 #blinds{font-size:13px;color:#94a3b8;font-weight:600;}
 #handNo{flex:1;text-align:right;font-size:12px;color:#64748b;}
 

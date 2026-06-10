@@ -28,6 +28,17 @@ const UI = {
     };
     $('panelClose').onclick = () => UI.closePanel();
     $('btnMenu').onclick = () => UI.showMenu();
+    UI.els.eye = $('btnEye');
+    UI.els.eye.classList.toggle('on', !!Save.data.xray);
+    UI.els.eye.onclick = () => {
+      Save.data.xray = !Save.data.xray;
+      Save.save();
+      UI.els.eye.classList.toggle('on', Save.data.xray);
+      UI.toast(Save.data.xray
+        ? '👁 X-ray on — everyone\'s cards are face up (the bots play fair)'
+        : 'X-ray off — cards are secret again');
+      UI.update();
+    };
     UI.els.btnFold.onclick = () => UI.act({ type: 'fold' });
     UI.els.btnCall.onclick = () => {
       if (!UI._ctx) return;
@@ -98,6 +109,19 @@ const UI = {
     UI.els.raiseSlider.value = Math.round(t * 100);
   },
 
+  // best 5-card score from 5, 6 or 7 available cards
+  evalAvail(cs){
+    if (cs.length >= 7) return Cards.eval7(cs.slice(0, 7));
+    if (cs.length === 5) return Cards.eval5(cs);
+    let best = 0;
+    for (let skip = 0; skip < cs.length; skip++){
+      const pick = cs.filter((_, i) => i !== skip);
+      const s = Cards.eval5(pick);
+      if (s > best) best = s;
+    }
+    return best;
+  },
+
   cardEl(c, sm){
     const d = document.createElement('div');
     if (c === null){
@@ -138,7 +162,7 @@ const UI = {
       const cards = document.createElement('div');
       cards.className = 'cards';
       if (p.cards.length && !p.folded){
-        const show = p.isHuman || p.revealed;
+        const show = p.isHuman || p.revealed || Save.data.xray;
         for (const c of p.cards) cards.appendChild(UI.cardEl(show ? c : null, !p.isHuman));
       }
       if (p.isHuman) d.appendChild(cards);
@@ -179,6 +203,14 @@ const UI = {
       act.textContent = p.out ? 'OUT · ' + Engine.place(p.finish)
         : (p.allin && !p.folded ? 'ALL-IN' : (p.lastAction || ''));
       d.appendChild(act);
+
+      if (Save.data.xray && !p.isHuman && !p.folded && !p.out &&
+          p.cards.length && Engine.board.length >= 3){
+        const h = document.createElement('div');
+        h.className = 'hint';
+        h.textContent = Cards.handName(UI.evalAvail(p.cards.concat(Engine.board)));
+        d.appendChild(h);
+      }
 
       if (p.bet > 0){
         const bc = document.createElement('div');
@@ -310,6 +342,7 @@ const UI = {
       '<p><b>Your turn:</b> Fold, Check/Call, or Bet/Raise. The raise panel has a slider plus Min, ½ Pot, Pot and All-in shortcuts.</p>' +
       '<p><b>Hand ranks</b> (high → low): Royal/Straight Flush, Four of a Kind, Full House, Flush, Straight, Three of a Kind, Two Pair, Pair, High Card.</p>' +
       '<p><b>The bots</b> have personalities — 🐗 Rocco bluffs a lot, 🐻 Viktor only plays strong cards. Watch their habits.</p>' +
+      '<p><b>👁 X-ray:</b> tap the eye in the top bar to play with everyone\'s cards face up — great for learning. The bots don\'t peek at yours.</p>' +
       '<p>Side pots are handled correctly when someone is all-in — you can only win what you matched.</p>';
     b.appendChild(d);
   },
