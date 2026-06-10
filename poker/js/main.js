@@ -5,7 +5,10 @@
     // mode comes from ?mode= or #hash — the hash survives CDN interstitials
     const qp = new URLSearchParams(location.search).get('mode');
     const hp = (location.hash || '').replace(/^#(mode=)?/, '');
-    const mq = qp || hp;
+    let mq = qp || hp;
+    let invite = null;
+    const jm = hp.match(/^join=([A-Za-z0-9]{3,8})$/);
+    if (jm){ invite = jm[1].toUpperCase(); mq = 'online'; }
     const mode = (mq === 'tourney' || mq === 'super' || mq === 'online') ? mq : 'cash';
     UI.init();
 
@@ -46,7 +49,8 @@
     });
     if (mode === 'online'){
       Net.setupMode = true;
-      UI.showOnlineSetup();
+      if (invite) UI.showInvitePanel(invite);
+      else UI.showOnlineSetup();
     } else {
       Engine.start();
       if (mode === 'tourney') UI.toast('Sit & Go started — $' + Engine.BUYIN + ' buy-in, top 3 paid');

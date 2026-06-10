@@ -23,6 +23,24 @@ const Net = {
   players(){ return Net.conns.filter(c => c.conn.open); },
   isAlive(conn){ return conn && conn.open; },
 
+  inviteUrl(){
+    return location.href.split('#')[0] + '#join=' + Net.room;
+  },
+
+  share(){
+    const url = Net.inviteUrl();
+    const done = () => UI.toast('Invite link copied — send it to your friends!');
+    if (navigator.share){
+      navigator.share({ title: 'Tiny Poker', text: 'Join my poker table — room ' + Net.room, url }).catch(() => {});
+      return;
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(done).catch(() => UI.showLinkPanel(url));
+      return;
+    }
+    UI.showLinkPanel(url);
+  },
+
   code(){
     const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
     let s = '';

@@ -451,6 +451,28 @@ const UI = {
   },
 
   // ---- online setup ----
+  // opened from an invite link (#join=CODE)
+  showInvitePanel(code){
+    const b = UI.openPanel('🌐 You\'re invited!');
+    b.appendChild(UI.row('<div class="grow" style="text-align:center">Room <b style="letter-spacing:4px;color:#fbbf24;font-size:20px">' + code + '</b> is waiting for you.</div>'));
+    b.appendChild(UI.row('<div class="grow">Your name</div><input id="onName" maxlength="10" style="background:#1e293b;border:1px solid #334155;color:#fff;border-radius:8px;padding:8px;width:130px" value="' + (Save.data.name || 'Player') + '">'));
+    UI.btnRow(b, '🪑 Sit down at the table', '', () => {
+      const name = (document.getElementById('onName').value || 'Player').slice(0, 10);
+      Save.data.name = name;
+      Save.save();
+      Net.join(code, name);
+    });
+    UI.btnRow(b, '🃏 No thanks — lobby', 'gray', () => { location.href = '../'; });
+  },
+
+  // clipboard unavailable: show the link to copy manually
+  showLinkPanel(url){
+    const b = UI.openPanel('🔗 Invite link');
+    b.appendChild(UI.row('<input readonly id="invUrl" value="' + url + '" style="background:#1e293b;border:1px solid #334155;color:#fff;border-radius:8px;padding:8px;width:100%;font-size:12px" onclick="this.select()">'));
+    b.appendChild(UI.row('<div class="sub grow">Long-press (or tap) to select, then copy and send it.</div>'));
+    UI.btnRow(b, '← Back to room', 'gray', () => UI.showRoomPanel());
+  },
+
   showOnlineSetup(){
     const b = UI.openPanel('🌐 Play online with friends');
     b.appendChild(UI.row('<div class="grow">Your name</div><input id="onName" maxlength="10" style="background:#1e293b;border:1px solid #334155;color:#fff;border-radius:8px;padding:8px;width:130px" value="' + (Save.data.name || 'Player') + '">'));
@@ -476,7 +498,8 @@ const UI = {
   showRoomPanel(){
     const b = UI.openPanel('🎲 Room ' + Net.room);
     b.appendChild(UI.row('<div class="grow" style="text-align:center;font-size:26px;letter-spacing:8px;color:#fbbf24"><b>' + Net.room + '</b></div>'));
-    b.appendChild(UI.row('<div class="sub grow" style="text-align:center">Share this code. Friends: lobby → Online → Join.</div>'));
+    UI.btnRow(b, '🔗 Share invite link', '', () => Net.share());
+    b.appendChild(UI.row('<div class="sub grow" style="text-align:center">…or tell them the code: lobby → Online → Join.</div>'));
     const list = Net.players();
     b.appendChild(UI.row('<div class="grow">1. ' + (Save.data.name || 'You') + ' (host)</div><div>✅</div>'));
     list.forEach((pl, i) => b.appendChild(UI.row('<div class="grow">' + (i + 2) + '. ' + pl.name + '</div><div>✅</div>')));
