@@ -1,18 +1,16 @@
 'use strict';
-// Concatenates the poker source files into poker/js/bundle.js.
-// One script request instead of seven — the free CDN we deploy on
-// rate-limits parallel requests (HTTP 425), which used to randomly
-// break page loads. Run after editing any poker/js source file:
-//   node tools/build.js
+// Concatenates the app sources into js/bundle.js (one script request —
+// the free CDN we deploy on rate-limits parallel requests).
+// Run after editing any js source file:  node tools/build.js
 const fs = require('fs');
 const path = require('path');
 
-const ORDER = ['cards.js', 'ai.js', 'engine.js', 'save.js', 'ui.js', 'net.js', 'main.js'];
+const ORDER = ['config.js', 'data.js', 'core.js', 'app.js'];
 const src = ORDER.map(f => {
-  const body = fs.readFileSync(path.join(__dirname, '..', 'poker', 'js', f), 'utf8');
+  const body = fs.readFileSync(path.join(__dirname, '..', 'js', f), 'utf8');
   return '/* ===== ' + f + ' ===== */\n' + body.replace(/^'use strict';\n/, '');
 }).join('\n');
 
-const out = "'use strict';\n// GENERATED FILE — edit poker/js/*.js and run: node tools/build.js\n" + src;
-fs.writeFileSync(path.join(__dirname, '..', 'poker', 'js', 'bundle.js'), out);
+const out = "'use strict';\n// GENERATED FILE — edit js/*.js and run: node tools/build.js\n" + src;
+fs.writeFileSync(path.join(__dirname, '..', 'js', 'bundle.js'), out);
 console.log('bundle.js written:', out.length, 'bytes');

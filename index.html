@@ -1,179 +1,37 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#123524">
-<meta name="description" content="Tiny Poker — No-Limit Texas Hold'em in your browser. Cash games and Sit & Go tournaments.">
-<title>Tiny Poker</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html,body{min-height:100%;}
-body{
-  font-family:Georgia,'Times New Roman',serif;color:#f3e9c9;
-  display:flex;flex-direction:column;align-items:center;
-  padding:calc(env(safe-area-inset-top) + 30px) 16px calc(env(safe-area-inset-bottom) + 26px);
-  background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Ctext x='18' y='48' font-size='30' fill='%23ffffff' opacity='0.035'%3E%E2%99%A0%3C/text%3E%3Ctext x='88' y='118' font-size='30' fill='%23ffffff' opacity='0.035'%3E%E2%99%A6%3C/text%3E%3C/svg%3E"),
-    radial-gradient(ellipse at 50% 20%, #2d7a4f 0%, #1f5c3a 45%, #133d27 100%);
-  background-attachment:fixed;
-}
-
-/* casino plaque header */
-header{
-  text-align:center;margin-bottom:30px;padding:16px 38px;
-  border:3px double #d4af37;border-radius:10px;
-  background:linear-gradient(#173f2b,#10311f);
-  box-shadow:0 6px 24px rgba(0,0,0,.45), inset 0 0 18px rgba(0,0,0,.35);
-}
-h1{
-  font-size:30px;font-weight:700;letter-spacing:6px;color:#e8c558;
-  text-shadow:0 1px 0 #7a5c14, 0 2px 4px rgba(0,0,0,.6);
-  font-variant:small-caps;
-}
-.suits{margin-top:6px;font-size:15px;letter-spacing:10px;}
-.suits .r{color:#e06c6c;} .suits .b{color:#cfd6cd;}
-.tag{margin-top:6px;font-size:13px;font-style:italic;color:#b9cdb4;letter-spacing:1px;}
-.bank{margin-top:8px;font-size:14px;color:#e8c558;letter-spacing:1px;}
-
-/* dealt cards */
-main{display:flex;flex-direction:column;gap:30px;width:100%;max-width:400px;align-items:center;}
-@media (min-width:880px){ main{max-width:920px;flex-direction:row;flex-wrap:wrap;justify-content:center;gap:40px;align-items:stretch;} }
-
-.pcard{
-  display:block;text-decoration:none;width:100%;max-width:340px;
-  background:#fbf8ef;border-radius:16px;padding:40px 16px 18px;position:relative;
-  border:1px solid #c9bfa3;
-  box-shadow:0 12px 32px rgba(0,0,0,.5), inset 0 0 0 6px #fbf8ef, inset 0 0 0 7px #c9bfa3;
-  transform:rotate(-2.2deg);
-  transition:transform .18s ease, box-shadow .18s ease;
-}
-.pcard.right{transform:rotate(2.2deg);}
-.pcard:hover,.pcard:active{transform:rotate(0) translateY(-4px);box-shadow:0 18px 42px rgba(0,0,0,.55), inset 0 0 0 6px #fbf8ef, inset 0 0 0 7px #c9bfa3;}
-
-.pip{position:absolute;font-family:Georgia,serif;font-weight:700;line-height:1;text-align:center;}
-.pip .rk{font-size:22px;display:block;}
-.pip .st{font-size:20px;display:block;margin-top:1px;}
-.pip.tl{top:12px;left:14px;}
-.pip.br{bottom:12px;right:14px;transform:rotate(180deg);}
-.pip.red{color:#c0303a;} .pip.blk{color:#1c2430;}
-
-.shot{
-  border:2px solid #1c2430;border-radius:8px;overflow:hidden;height:200px;
-  box-shadow:inset 0 0 12px rgba(0,0,0,.3);
-}
-.pcard.red-card .shot{border-color:#c0303a;}
-.shot img{width:100%;height:100%;object-fit:cover;object-position:center 32%;display:block;}
-
-.pcard h2{
-  text-align:center;margin:14px 0 4px;font-size:23px;color:#1c2430;
-  font-variant:small-caps;letter-spacing:2px;
-}
-.pcard.red-card h2{color:#c0303a;}
-.pcard p{
-  text-align:center;color:#4a4436;font-size:13.5px;line-height:1.5;font-style:italic;
-  min-height:62px;margin-bottom:6px;
-}
-.terms{
-  text-align:center;font-size:11.5px;color:#8a8068;letter-spacing:.5px;margin-bottom:12px;
-  font-variant:small-caps;
-}
-
-/* casino chip button */
-.chipbtn{
-  display:flex;align-items:center;justify-content:center;gap:8px;margin:0 auto;
-  width:78%;padding:12px 10px;border-radius:999px;
-  font-family:Georgia,serif;font-size:16px;font-weight:700;letter-spacing:2px;color:#fff;
-  font-variant:small-caps;
-  border:3px dashed rgba(255,255,255,.75);
-  box-shadow:0 4px 0 rgba(0,0,0,.35), inset 0 0 10px rgba(0,0,0,.3);
-}
-.chipbtn.blk{background:radial-gradient(circle at 50% 35%, #38445a, #1c2430);}
-.chipbtn.red{background:radial-gradient(circle at 50% 35%, #d04a54, #a02530);}
-.chipbtn.gold{background:radial-gradient(circle at 50% 35%, #e3a93c, #a8761a);}
-.pcard.gold-card .shot{border-color:#a8761a;}
-.pcard.gold-card h2{color:#a8761a;}
-.pip.gold{color:#a8761a;}
-
-footer{
-  margin-top:34px;text-align:center;font-size:12px;color:#b9cdb4;
-  font-style:italic;letter-spacing:1px;line-height:1.9;
-}
-footer a{color:#e8c558;}
-.rule{color:#d4af37;letter-spacing:6px;margin-bottom:4px;font-style:normal;}
-</style>
+<meta name="theme-color" content="#0e7461">
+<meta name="description" content="BudgetTrip — วางแผนงบเที่ยวไทยใน 30 วินาที | Plan your Thailand trip budget in 30 seconds.">
+<title>BudgetTrip 🇹🇭</title>
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-<header>
-  <h1>Tiny Poker</h1>
-  <div class="suits"><span class="b">♠</span><span class="r">♥</span><span class="b">♣</span><span class="r">♦</span></div>
-  <div class="tag">no-limit texas hold'em · open all night</div>
-  <div class="bank" id="bank"></div>
+<header id="top">
+  <div class="brand">🌴 <b>Budget</b>Trip <span class="flag">🇹🇭</span></div>
+  <div id="tagline" class="tag"></div>
+  <button id="langBtn">EN</button>
 </header>
 
-<main>
-  <a class="pcard" href="poker/#cash">
-    <span class="pip tl blk"><span class="rk">A</span><span class="st">♠</span></span>
-    <span class="pip br blk"><span class="rk">A</span><span class="st">♠</span></span>
-    <div class="shot"><img src="assets/poker.png?v=8" alt="A hold'em cash game table mid-hand"></div>
-    <h2>Cash Game</h2>
-    <p>Sit down with your bankroll against four regulars who never sleep.
-       Rocco bluffs too much. Viktor never does. Leave whenever you like.</p>
-    <div class="terms">blinds $10 / $20 · rebuy when busted</div>
-    <span class="chipbtn blk">♠ Take a Seat</span>
-  </a>
+<main id="view"></main>
 
-  <a class="pcard right red-card" href="poker/#tourney">
-    <span class="pip tl red"><span class="rk">K</span><span class="st">♥</span></span>
-    <span class="pip br red"><span class="rk">K</span><span class="st">♥</span></span>
-    <div class="shot"><img src="assets/tourney.png?v=8" alt="A Sit &amp; Go tournament table"></div>
-    <h2>Tournament</h2>
-    <p>A five-handed Sit &amp; Go. The blinds rise every six hands, there are
-       no rebuys, and the last chip standing takes the crown.</p>
-    <div class="terms">$200 buy-in · prizes $600 / $300 / $100</div>
-    <span class="chipbtn red">♥ Enter the Sit &amp; Go</span>
-  </a>
+<footer>BudgetTrip · MVP · <a href="https://github.com/newworldb/game" rel="noopener">GitHub</a></footer>
 
-  <a class="pcard gold-card" href="poker/#super">
-    <span class="pip tl gold"><span class="rk">J</span><span class="st">⚡</span></span>
-    <span class="pip br gold"><span class="rk">J</span><span class="st">⚡</span></span>
-    <div class="shot"><img src="assets/superturbo.png?v=8" alt="A super turbo table with every card face up"></div>
-    <h2>⚡ Super Turbo</h2>
-    <p>Three seconds to act or the clock acts for you. Tiny stacks, blinds
-       up every two hands — and <b>every card is dealt face up</b>. Pure chaos.</p>
-    <div class="terms">$100 buy-in · 3-sec clock · x-ray · prizes $300 / $150 / $50</div>
-    <span class="chipbtn gold">⚡ Blink and It's Over</span>
-  </a>
+<div id="toast" class="hidden"></div>
 
-  <a class="pcard right" href="poker/#online">
-    <span class="pip tl blk"><span class="rk">10</span><span class="st">♣</span></span>
-    <span class="pip br blk"><span class="rk">10</span><span class="st">♣</span></span>
-    <div class="shot"><img src="assets/poker.png?v=8" alt="An online table with friends"></div>
-    <h2>🌐 Online</h2>
-    <p>Deal a private table and text the 4-letter code to your friends —
-       up to five of you, each on your own phone. Empty seats get bots.</p>
-    <div class="terms">peer-to-peer · play chips · 25-sec clock</div>
-    <span class="chipbtn blk">♣ Gather the Table</span>
-  </a>
-</main>
-
-<footer>
-  <div class="rule">· · ♠ ♥ ♣ ♦ · ·</div>
-  plays in your browser — bankroll saves locally — no ads, no accounts<br>
-  <a href="https://github.com/newworldb/game">source on github</a>
-</footer>
-
+<script src="js/bundle.js"></script>
 <script>
-try {
-  const d = JSON.parse(localStorage.getItem('tinypoker-v1'));
-  if (d && typeof d.bank === 'number'){
-    const s = d.stats || {};
-    document.getElementById('bank').textContent =
-      'bankroll $' + d.bank + (s.titles ? ' · 🏆 × ' + s.titles : '');
+window.addEventListener('load', function(){
+  if (typeof App === 'undefined' || typeof Core === 'undefined'){
+    document.body.innerHTML =
+      '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:16px;font-family:system-ui">' +
+      '<div style="font-size:40px">🌴</div><div style="color:#777">Network hiccup while loading…</div>' +
+      '<button onclick="location.reload()" style="background:#0e7461;color:#fff;border:none;border-radius:12px;padding:14px 28px;font-size:16px;font-weight:700">Tap to retry</button></div>';
   }
-} catch (e) { /* fresh visitor */ }
+});
 </script>
-
 </body>
 </html>
