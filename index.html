@@ -38,7 +38,7 @@ h1{
 
 /* dealt cards */
 main{display:flex;flex-direction:column;gap:30px;width:100%;max-width:400px;align-items:center;}
-@media (min-width:880px){ main{max-width:880px;flex-direction:row;justify-content:center;gap:46px;} }
+@media (min-width:880px){ main{max-width:1240px;flex-direction:row;justify-content:center;gap:40px;align-items:stretch;} }
 
 .pcard{
   display:block;text-decoration:none;width:100%;max-width:340px;
@@ -90,6 +90,10 @@ main{display:flex;flex-direction:column;gap:30px;width:100%;max-width:400px;alig
 }
 .chipbtn.blk{background:radial-gradient(circle at 50% 35%, #38445a, #1c2430);}
 .chipbtn.red{background:radial-gradient(circle at 50% 35%, #d04a54, #a02530);}
+.chipbtn.gold{background:radial-gradient(circle at 50% 35%, #e3a93c, #a8761a);}
+.pcard.gold-card .shot{border-color:#a8761a;}
+.pcard.gold-card h2{color:#a8761a;}
+.pip.gold{color:#a8761a;}
 
 footer{
   margin-top:34px;text-align:center;font-size:12px;color:#b9cdb4;
@@ -129,6 +133,17 @@ footer a{color:#e8c558;}
        no rebuys, and the last chip standing takes the crown.</p>
     <div class="terms">$200 buy-in · prizes $600 / $300 / $100</div>
     <span class="chipbtn red">♥ Enter the Sit &amp; Go</span>
+  </a>
+
+  <a class="pcard gold-card" href="poker/?mode=super">
+    <span class="pip tl gold"><span class="rk">J</span><span class="st">⚡</span></span>
+    <span class="pip br gold"><span class="rk">J</span><span class="st">⚡</span></span>
+    <div class="shot"><img src="assets/superturbo.png" alt="A super turbo table with every card face up"></div>
+    <h2>⚡ Super Turbo</h2>
+    <p>Three seconds to act or the clock acts for you. Tiny stacks, blinds
+       up every two hands — and <b>every card is dealt face up</b>. Pure chaos.</p>
+    <div class="terms">$100 buy-in · 3-sec clock · x-ray · prizes $300 / $150 / $50</div>
+    <span class="chipbtn gold">⚡ Blink and It's Over</span>
   </a>
 </main>
 

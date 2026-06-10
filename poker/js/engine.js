@@ -5,12 +5,18 @@
 // 'raise', to} where `to` is the total street bet to raise to.
 const Engine = {
   cfg: { SB: 10, BB: 20, STACK: 2000 },
-  mode: 'cash',                       // 'cash' | 'tourney'
+  mode: 'cash',                       // 'cash' | 'tourney' | 'super'
   TOURNEY_STACK: 1500,
   BUYIN: 200,
   PRIZES: [600, 300, 100],            // 1st / 2nd / 3rd of 5
   LEVELS: [[10, 20], [15, 30], [25, 50], [40, 80], [60, 120], [100, 200], [150, 300], [250, 500], [400, 800], [600, 1200]],
   LEVEL_HANDS: 6,                     // hands per blind level
+  SUPER_STACK: 500,
+  SUPER_BUYIN: 100,
+  SUPER_PRIZES: [300, 150, 50],
+  SUPER_LEVELS: [[25, 50], [50, 100], [75, 150], [100, 200], [150, 300], [250, 500], [400, 800], [600, 1200]],
+  SUPER_LEVEL_HANDS: 2,
+  paceMult: 1,                        // sleep scaling: super turbo runs ~3x faster
   tourneyHands: 0,
   seats: [],
   button: -1,
@@ -35,13 +41,16 @@ const Engine = {
   ],
 
   init(humanStack, mode){
-    Engine.mode = mode === 'tourney' ? 'tourney' : 'cash';
+    Engine.mode = (mode === 'tourney' || mode === 'super') ? mode : 'cash';
     Engine.tourneyHands = 0;
+    Engine.paceMult = Engine.mode === 'super' ? 0.3 : 1;
     if (Engine.mode === 'cash'){ Engine.cfg.SB = 10; Engine.cfg.BB = 20; }
-    const startStack = Engine.mode === 'tourney' ? Engine.TOURNEY_STACK : (humanStack || Engine.cfg.STACK);
+    const startStack = Engine.mode === 'tourney' ? Engine.TOURNEY_STACK
+      : Engine.mode === 'super' ? Engine.SUPER_STACK
+      : (humanStack || Engine.cfg.STACK);
     const seat = (i, name, emoji, isHuman, tight, aggr) => ({
       i, name, emoji, isHuman,
-      stack: isHuman ? startStack : (Engine.mode === 'tourney' ? Engine.TOURNEY_STACK : Engine.cfg.STACK),
+      stack: isHuman ? startStack : (Engine.mode === 'cash' ? Engine.cfg.STACK : startStack),
       tight, aggr,
       cards: [], bet: 0, total: 0, folded: true, allin: false,
       acted: false, revealed: false, raises: 0, lastAction: '', winAmt: 0,
@@ -53,8 +62,16 @@ const Engine = {
     Engine.handNo = 0;
   },
 
+  isTourney(){ return Engine.mode !== 'cash'; },
+  buyin(){ return Engine.mode === 'super' ? Engine.SUPER_BUYIN : Engine.BUYIN; },
+  prizes(){ return Engine.mode === 'super' ? Engine.SUPER_PRIZES : Engine.PRIZES; },
+  levels(){ return Engine.mode === 'super' ? Engine.SUPER_LEVELS : Engine.LEVELS; },
+  levelHands(){ return Engine.mode === 'super' ? Engine.SUPER_LEVEL_HANDS : Engine.LEVEL_HANDS; },
+  startChips(){ return Engine.mode === 'super' ? Engine.SUPER_STACK : Engine.TOURNEY_STACK; },
+  zzz(ms){ return Engine.hooks.sleep(Math.max(60, Math.round(ms * Engine.paceMult))); },
   level(){
-    return Math.min(Engine.LEVELS.length - 1, (Engine.tourneyHands / Engine.LEVEL_HANDS) | 0);
+    const ls = Engine.levels();
+    return Math.min(ls.length - 1, (Engine.tourneyHands / Engine.levelHands()) | 0);
   },
   seated(){ return Engine.seats.filter(p => !p.out); },
   nextSeated(i){
@@ -90,20 +107,20 @@ const Engine = {
     while (gen === Engine.gen){
       const res = await Engine.playHand(gen);
       if (res === 'aborted' || gen !== Engine.gen) return;
-      if (Engine.mode === 'tourney') Engine.processEliminations();
+      if (Engine.isTourney()) Engine.processEliminations();
       Engine.hooks.handEnd();
-      if (Engine.mode === 'tourney'){
+      if (Engine.isTourney()){
         const human = Engine.human();
         const remaining = Engine.seated().length;
         if (human.out || remaining <= 1){
           if (!human.out) human.finish = 1;
           const placeN = human.finish || 1;
-          const prize = Engine.PRIZES[placeN - 1] || 0;
+          const prize = Engine.prizes()[placeN - 1] || 0;
           Engine.hooks.tourneyEnd(placeN, prize);
           return;
         }
       }
-      await Engine.hooks.sleep(2400);
+      await Engine.zzz(2400);
     }
   },
 
@@ -131,8 +148,8 @@ const Engine = {
     } else {
       const lvl = Engine.level();
       const prev = [Engine.cfg.SB, Engine.cfg.BB];
-      Engine.cfg.SB = Engine.LEVELS[lvl][0];
-      Engine.cfg.BB = Engine.LEVELS[lvl][1];
+      Engine.cfg.SB = Engine.levels()[lvl][0];
+      Engine.cfg.BB = Engine.levels()[lvl][1];
       if (Engine.cfg.BB !== prev[1] && Engine.tourneyHands > 0)
         H.log('Blinds up! Now ' + Engine.cfg.SB + '/' + Engine.cfg.BB);
       Engine.tourneyHands++;
@@ -160,7 +177,7 @@ const Engine = {
     for (const p of seated){ p.cards = [Engine.deck.pop(), Engine.deck.pop()]; }
     Engine.street = 'preflop';
     H.update();
-    await H.sleep(500);
+    await Engine.zzz(500);
     if (gen !== Engine.gen) return 'aborted';
 
     let res = await Engine.bettingRound(next(bb), gen);
@@ -181,7 +198,7 @@ const Engine = {
         for (const p of Engine.active()) p.revealed = true;
       }
       H.update();
-      await H.sleep(800);
+      await Engine.zzz(800);
       if (gen !== Engine.gen) return 'aborted';
       if (Engine.canActCount() >= 2){
         res = await Engine.bettingRound(Engine.nextActive(Engine.button), gen);
@@ -246,7 +263,7 @@ const Engine = {
       if (!act) return { type: ctx.toCall > 0 ? 'fold' : 'check' };
       return act;
     }
-    await Engine.hooks.sleep(500 + Math.random() * 900);
+    await Engine.zzz(500 + Math.random() * 900);
     if (gen !== Engine.gen) return { type: 'fold' };
     return AI.decide(p, ctx);
   },
@@ -305,7 +322,7 @@ const Engine = {
     w.winAmt = amt;
     H.log(w.name + ' wins $' + amt);
     H.update();
-    await H.sleep(900);
+    await Engine.zzz(900);
     return gen === Engine.gen ? 'ended' : 'aborted';
   },
 
@@ -317,7 +334,7 @@ const Engine = {
     const scores = new Map();
     for (const p of live) scores.set(p, Cards.eval7(p.cards.concat(Engine.board)));
     H.update();
-    await H.sleep(1100);
+    await Engine.zzz(1100);
     if (gen !== Engine.gen) return 'aborted';
 
     // side pots: peel layers of contributions
@@ -355,7 +372,7 @@ const Engine = {
       H.log(p.name + ' wins $' + amt + ' with ' + Cards.handName(scores.get(p)));
     }
     H.update();
-    await H.sleep(1400);
+    await Engine.zzz(1400);
     return gen === Engine.gen ? 'ended' : 'aborted';
   },
 };

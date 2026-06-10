@@ -2,12 +2,14 @@
 (function(){
   window.addEventListener('load', () => {
     const first = !Save.load();
-    const mode = new URLSearchParams(location.search).get('mode') === 'tourney' ? 'tourney' : 'cash';
+    const mq = new URLSearchParams(location.search).get('mode');
+    const mode = (mq === 'tourney' || mq === 'super') ? mq : 'cash';
     UI.init();
 
-    if (mode === 'tourney'){
-      if (Save.data.bank < Engine.BUYIN) Save.data.bank = Engine.BUYIN; // never lock the player out
-      Save.data.bank -= Engine.BUYIN;
+    if (mode !== 'cash'){
+      const buyin = mode === 'super' ? Engine.SUPER_BUYIN : Engine.BUYIN;
+      if (Save.data.bank < buyin) Save.data.bank = buyin; // never lock the player out
+      Save.data.bank -= buyin;
       Save.data.stats.tourneys = (Save.data.stats.tourneys || 0) + 1;
       Save.save();
     }
@@ -41,6 +43,7 @@
     });
     Engine.start();
     if (mode === 'tourney') UI.toast('Sit & Go started — $' + Engine.BUYIN + ' buy-in, top 3 paid');
+    if (mode === 'super') UI.toast('⚡ SUPER TURBO — 3s to act, all cards face up, blinds fly!');
     if (first) UI.showHelp();
   });
 })();

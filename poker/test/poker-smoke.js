@@ -93,7 +93,26 @@ Engine.init(2000);
     assert(finishes.every(f => f >= 2 && f <= 5), 'eliminated players have placements 2..5');
     if (th > 6) assert(blindsRose, 'blinds escalated');
   }
-  console.log('POKER SMOKE TEST PASSED — cash + 20 tournaments, chips conserved, evaluator OK');
+  // ---- super turbo: 10 complete tournaments, faster levels, short stacks ----
+  for (let t = 0; t < 10; t++){
+    Engine.init(0, 'super');
+    const tg = ++Engine.gen;
+    let th = 0, maxBB = 0;
+    while (Engine.seats.filter(p => !p.out).length > 1){
+      const res = await Engine.playHand(tg);
+      if (res === 'aborted') throw new Error('super abort');
+      Engine.processEliminations();
+      const sum = Engine.seats.reduce((a, p) => a + p.stack + p.total, 0);
+      assert(sum === 5 * Engine.SUPER_STACK, 'super chips conserved, got ' + sum);
+      maxBB = Math.max(maxBB, Engine.cfg.BB);
+      if (++th > 1000) throw new Error('super turbo never ended');
+    }
+    assert(Engine.cfg.BB >= 50, 'super starts at 25/50, BB=' + Engine.cfg.BB);
+    if (th > 2) assert(maxBB > 50, 'super blinds escalate fast');
+    const champ = Engine.seats.filter(p => !p.out);
+    assert(champ.length === 1 && champ[0].stack === 5 * Engine.SUPER_STACK, 'super champion holds all chips');
+  }
+  console.log('POKER SMOKE TEST PASSED — cash + 20 tournaments + 10 super turbos, chips conserved, evaluator OK');
 })().catch(e => { console.error(e); process.exit(1); });
 `;
 vm.runInContext(test, sandbox, { filename: 'poker-test.js' });
