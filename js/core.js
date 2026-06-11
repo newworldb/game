@@ -157,4 +157,98 @@ const Core = {
   fmt(n){
     return '฿' + Math.round(n).toLocaleString('en-US');
   },
+
+  // ---- automatic full-trip planner: hotel + day-by-day + meals, best value ----
+  MEAL_COST: [0, 150, 400, 900], // ฿/person by restaurant price level
+
+  costsOf(trip){
+    if (trip.custom) return { costs: trip.custom.costs, flight: trip.custom.flight };
+    const d = DESTS[trip.dest] || DESTS.bangkok;
+    return { costs: d.costs, flight: d.flight };
+  },
+
+  autoPlan(trip){
+    const seed = trip.planSeed || 0;
+    const people = trip.people, nights = trip.nights, rooms = Core.rooms(people);
+    const { costs, flight } = Core.costsOf(trip);
+    const styleRates = costs[trip.style] || costs.mid;
+    const picks = (typeof PICKS !== 'undefined' && PICKS[trip.dest]) || null;
+    const budgetTotal = Core.total(trip.budget);
+    const tiersOrder = { budget: ['budget'], mid: ['mid', 'budget'], comfort: ['comfort', 'mid', 'budget'] }[trip.style] || ['mid', 'budget'];
+
+    // food / transport / flights are tied to the trip's own budget so the
+    // plan always matches; only the hotel (stay) and scheduled activities vary.
+    const foodBudget = trip.budget.food || styleRates[1] * people * nights;
+    const transport = trip.budget.transport || styleRates[2] * people * nights;
+    const flights = trip.budget.flights || 0;
+    const actBudget = trip.budget.act || styleRates[3] * people * nights;
+    const foodPerDay = Math.round(foodBudget / nights);
+
+    const build = (tier) => {
+      // best-value hotel for this tier
+      let hotel = null, stay;
+      if (picks){
+        hotel = picks.h.find(h => h.tier === tier) || picks.h[0];
+        stay = hotel.p * nights * rooms;
+      } else {
+        stay = (costs[tier] || styleRates)[0] * nights * rooms;
+      }
+      const days = [];
+      const acts = picks ? picks.a.slice() : null;
+      const eats = picks ? picks.e.slice() : null;
+      let actSpent = 0, foodTotal = 0;
+      for (let i = 0; i < nights + 1; i++){
+        const slots = [];
+        if (i === 0) slots.push({ type: 'travel', label: 'arrive' });
+        if (i === nights){ slots.push({ type: 'travel', label: 'depart' }); days.push({ day: i + 1, slots }); break; }
+        // one activity per full day (skip the arrival day unless it's the only day),
+        // and only charge paid ones the budget can still afford
+        const isActivityDay = i > 0 || nights === 1;
+        if (isActivityDay){
+          const idx = (nights === 1 ? 0 : i - 1);
+          if (acts && acts.length){
+            const a = acts[(idx + seed) % acts.length];
+            const cost = a.p * people;
+            if (actSpent + cost <= actBudget * 1.15){
+              slots.push({ type: 'act', item: a, cost });
+              actSpent += cost;
+            } else {
+              slots.push({ type: 'act', item: a, cost: 0, free: true }); // suggested, not budgeted
+            }
+          } else {
+            const genCost = styleRates[3] * people;
+            if (actSpent + genCost <= actBudget * 1.15){
+              slots.push({ type: 'actGeneric', label: idx === 0 ? 'cityTour' : 'dayTour', cost: genCost });
+              actSpent += genCost;
+            } else {
+              slots.push({ type: 'free' });
+            }
+          }
+        }
+        // evening meal — cost pinned to the per-day food budget
+        if (eats){
+          const e = eats[(i + seed) % eats.length];
+          slots.push({ type: 'eat', item: e, cost: foodPerDay });
+        } else {
+          slots.push({ type: 'eatGeneric', cost: foodPerDay });
+        }
+        foodTotal += foodPerDay;
+        days.push({ day: i + 1, slots });
+      }
+      const grand = Math.round(stay + actSpent + foodTotal + transport + flights);
+      return { tier, hotel, stay, days, actTotal: actSpent, foodTotal, transport, flights, grand };
+    };
+
+    // best value: start at the trip's style, step down until it fits the budget
+    let plan = null, downgraded = false;
+    for (const tier of tiersOrder){
+      plan = build(tier);
+      if (plan.grand <= budgetTotal * 1.02) break;
+      downgraded = true;
+    }
+    plan.fits = plan.grand <= budgetTotal * 1.02;
+    plan.downgraded = downgraded && plan.fits;
+    plan.budgetTotal = budgetTotal;
+    return plan;
+  },
 };

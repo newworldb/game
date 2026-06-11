@@ -6,6 +6,13 @@ bundler, everything saves locally in the browser.
 
 ## What it does
 
+**The app plans the whole trip for you** — pick a place + budget and the
+Itinerary tab lays out a best-value hotel (auto-downgraded to fit your
+budget), a day-by-day schedule with real activities and restaurants, and a
+total that stays within budget. Every line has a Book button. No searching
+needed.
+
+
 1. **Budget estimator** — pick a destination (12 popular Thai spots from
    Bangkok to Pai), nights, travelers and travel style (backpacker /
    comfortable / premium) and get an instant THB budget broken down into

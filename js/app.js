@@ -2,7 +2,7 @@
 // BudgetTrip UI: hash-routed single-page app.
 // #home | #new | #trip-<id> (+ App.tab for the trip sub-tab)
 const App = {
-  tab: 'budget',
+  tab: 'plan',
   form: { dest: 'chiangmai', style: 'mid', nights: 3, people: 2, start: '', inclFlights: false },
 
   t(k){ return (I18N[Core.state.lang] || I18N.en)[k] || k; },
@@ -216,7 +216,7 @@ const App = {
       const trip = f.customSel
         ? Core.newTrip({ dest: 'custom', custom: f.customSel, style: f.style, nights: f.nights, people: f.people, start: f.start, inclFlights: f.inclFlights })
         : Core.newTrip({ dest: f.dest, style: f.style, nights: f.nights, people: f.people, start: f.start, inclFlights: f.inclFlights && !!d.flight });
-      App.tab = 'budget';
+      App.tab = 'plan';
       App.go('trip-' + trip.id);
     };
     w.appendChild(cb);
@@ -283,8 +283,8 @@ const App = {
         '<span class="bk-go">' + App.t('pickPlan') + ' ' + icon('chevron') + '</span></div>');
       card.onclick = () => {
         const trip = Core.newTrip({ dest: o.dest, style: o.style, nights: o.nights, people: f.people, start: '', inclFlights: o.inclFlights });
-        App.tab = 'budget';
-        App.toast(App.t('left') + ' ' + Core.fmt(o.left) + ' 🎉');
+        App.tab = 'plan';
+        App.toast(App.t('left') + ' ' + Core.fmt(o.left));
         App.go('trip-' + trip.id);
       };
       w.appendChild(card);
@@ -317,7 +317,7 @@ const App = {
       '<div><div class="bn-l">' + App.t('remaining') + '</div><div class="bn-v" style="color:' + (remaining < 0 ? '#e25555' : '#1f9d61') + '">' + Core.fmt(remaining) + '</div></div></div>'));
 
     const tabs = App.el('<div class="tabs"></div>');
-    [['budget', 'budget', 'wallet'], ['expenses', 'expenses', 'receipt'], ['book', 'book', 'tag']].forEach(([k, lk, ic]) => {
+    [['plan', 'planTab', 'calendar'], ['budget', 'budget', 'wallet'], ['expenses', 'expenses', 'receipt'], ['book', 'book', 'tag']].forEach(([k, lk, ic]) => {
       const b = App.el('<button class="' + (App.tab === k ? 'on' : '') + '">' + icon(ic) + ' ' + App.t(lk) + '</button>');
       b.onclick = () => { App.tab = k; App.render(); };
       tabs.appendChild(b);
@@ -326,7 +326,8 @@ const App = {
 
     if (App.tab === 'expenses') w.appendChild(App.tabExpenses(trip));
     else if (App.tab === 'book') w.appendChild(App.tabBook(trip));
-    else w.appendChild(App.tabBudget(trip));
+    else if (App.tab === 'budget') w.appendChild(App.tabBudget(trip));
+    else w.appendChild(App.tabPlan(trip));
 
     const del = App.el('<button class="dangerb">' + App.t('deleteTrip') + '</button>');
     del.onclick = () => {
@@ -334,6 +335,79 @@ const App = {
       else { del.dataset.armed = '1'; del.textContent = App.t('confirm'); }
     };
     w.appendChild(del);
+    return w;
+  },
+
+  tabPlan(trip){
+    const w = App.el('<div></div>');
+    const plan = Core.autoPlan(trip);
+    const th = Core.state.lang === 'th';
+
+    const fitCls = plan.fits ? 'fit' : 'nofit';
+    const head = App.el('<div class="planhead">' +
+      '<div class="ph-title">' + icon('sparkles') + ' ' + App.t('autoTitle') + '</div>' +
+      '<div class="ph-total">' + App.t('planTotal') + ' <b>' + Core.fmt(plan.grand) + '</b>' +
+      ' <span class="fitchip ' + fitCls + '">' + (plan.fits ? App.t('inBudget') : App.t('overBudget')) + ' · ' + App.t('budget') + ' ' + Core.fmt(plan.budgetTotal) + '</span></div>' +
+      (plan.downgraded ? '<div class="sub">' + App.t('downgradedNote') + '</div>' : '') +
+      '<button class="shufb">' + icon('refresh') + ' ' + App.t('shuffle') + '</button></div>');
+    head.querySelector('.shufb').onclick = () => {
+      trip.planSeed = (trip.planSeed || 0) + 1;
+      Core.save();
+      App.render();
+    };
+    w.appendChild(head);
+
+    // hotel picked for you
+    w.appendChild(App.el('<h2 class="sect">' + icon('bed') + ' ' + App.t('stayLine') + '</h2>'));
+    if (plan.hotel){
+      const h = plan.hotel;
+      w.appendChild(App.el('<a class="pickrow" target="_blank" rel="noopener sponsored" href="' + Links.hotelByName(trip, h.n) + '">' +
+        '<div class="grow"><b>' + App.pickName(h) + '</b>' +
+        '<div class="sub">' + h.area + ' · ' + Core.fmt(h.p) + App.t('perNight') + ' × ' + trip.nights + ' ' + App.t('nightsX') + ' = <b>' + Core.fmt(plan.stay) + '</b></div></div>' +
+        '<span class="pk-btn agoda">' + App.t('bookBtn') + '</span></a>'));
+    } else {
+      w.appendChild(App.el('<a class="pickrow" target="_blank" rel="noopener sponsored" href="' + Links.hotelAgoda(trip) + '">' +
+        '<div class="grow"><b>' + App.tripName(trip) + ' · ' + App.t('bookHotelA') + '</b>' +
+        '<div class="sub">' + App.t('total2') + ' ≈ <b>' + Core.fmt(plan.stay) + '</b> / ' + trip.nights + ' ' + App.t('nightsX') + '</div></div>' +
+        '<span class="pk-btn agoda">' + App.t('bookBtn') + '</span></a>'));
+    }
+    if (plan.flights > 0){
+      w.appendChild(App.el('<a class="pickrow" target="_blank" rel="noopener sponsored" href="' + Links.flights() + '">' +
+        '<div class="grow"><b>' + App.t('flights') + '</b><div class="sub">≈ <b>' + Core.fmt(plan.flights) + '</b></div></div>' +
+        '<span class="pk-btn flightsb">' + App.t('bookBtn') + '</span></a>'));
+    }
+
+    // day by day
+    for (const d of plan.days){
+      const dayEl = App.el('<div class="daycard"><div class="day-h">' + icon('calendar') + ' ' + App.t('day') + ' ' + d.day + '</div></div>');
+      for (const s of d.slots){
+        if (s.type === 'travel'){
+          dayEl.appendChild(App.el('<div class="slot"><span class="slot-ic">' + icon('plane') + '</span><div class="grow">' + App.t(s.label) + '</div></div>'));
+        } else if (s.type === 'act'){
+          dayEl.appendChild(App.el('<a class="slot link" target="_blank" rel="noopener sponsored" href="' + Links.actByName(s.item.n) + '">' +
+            '<span class="slot-ic">' + icon('ticket') + '</span><div class="grow"><b>' + App.pickName(s.item) + '</b>' +
+            '<div class="sub">' + (s.cost > 0 ? '≈ ' + Core.fmt(s.cost) : App.t('freeEntry')) + '</div></div>' +
+            '<span class="pk-btn klook">' + App.t('bookBtn') + '</span></a>'));
+        } else if (s.type === 'actGeneric'){
+          dayEl.appendChild(App.el('<a class="slot link" target="_blank" rel="noopener sponsored" href="' + Links.activities(trip) + '">' +
+            '<span class="slot-ic">' + icon('ticket') + '</span><div class="grow"><b>' + App.t(s.label) + '</b>' +
+            '<div class="sub">≈ ' + Core.fmt(s.cost) + '</div></div>' +
+            '<span class="pk-btn klook">' + App.t('bookBtn') + '</span></a>'));
+        } else if (s.type === 'eat'){
+          dayEl.appendChild(App.el('<a class="slot link" target="_blank" rel="noopener" href="' + Links.placeMap(s.item.n, trip) + '">' +
+            '<span class="slot-ic">' + icon('bowl') + '</span><div class="grow"><b>' + App.pickName(s.item) + '</b>' +
+            '<div class="sub">' + s.item.area + ' · ≈ ' + Core.fmt(s.cost) + '</div></div>' +
+            '<span class="pk-btn map">' + App.t('mapBtn') + '</span></a>'));
+        } else if (s.type === 'eatGeneric'){
+          dayEl.appendChild(App.el('<div class="slot"><span class="slot-ic">' + icon('bowl') + '</span><div class="grow">' + App.t('localEat') +
+            '<div class="sub">≈ ' + Core.fmt(s.cost) + '</div></div></div>'));
+        } else {
+          dayEl.appendChild(App.el('<div class="slot"><span class="slot-ic">' + icon('pin') + '</span><div class="grow">' + App.t('freeDay') + '</div></div>'));
+        }
+      }
+      w.appendChild(dayEl);
+    }
+    w.appendChild(App.el('<div class="disclosure">' + App.t('livePriceNote') + '<br>' + App.t('disclosure') + '</div>'));
     return w;
   },
 

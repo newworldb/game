@@ -244,6 +244,13 @@ const I18N = {
     mapBtn: 'Map', bookBtn: 'Book', morePartners: 'Search everything yourself',
     searchWorld: 'Search any city worldwide…', searching: 'Searching…',
     customNote: 'Smart estimate from country averages', anywhere: 'Or pick a Thai favorite',
+    planTab: 'Itinerary', autoTitle: 'Everything planned for you',
+    planTotal: 'This plan costs', inBudget: 'within budget', overBudget: 'over budget',
+    shuffle: 'Shuffle plan', day: 'Day', arrive: 'Arrive & check in', depart: 'Check out & head home',
+    freeDay: 'Free time — beach, café, stroll', stayLine: 'Your hotel (picked for you)',
+    livePriceNote: 'Estimated prices — tap Book to see the live price for your dates.',
+    cityTour: 'City highlights tour', dayTour: 'Top-rated day trip', localEat: 'Local food & street eats',
+    downgradedNote: 'Hotel adjusted down to fit your budget', nightsX: 'nights', total2: 'Total',
   },
   th: {
     tagline: 'วางแผนงบเที่ยวไทยใน 30 วินาที',
@@ -288,6 +295,13 @@ const I18N = {
     mapBtn: 'แผนที่', bookBtn: 'จอง', morePartners: 'ค้นหาเองทั้งหมด',
     searchWorld: 'ค้นหาเมืองทั่วโลก เช่น Tokyo, Paris…', searching: 'กำลังค้นหา…',
     customNote: 'ประเมินอัจฉริยะจากค่าเฉลี่ยของประเทศ', anywhere: 'หรือเลือกที่เที่ยวยอดฮิตในไทย',
+    planTab: 'แผนเที่ยว', autoTitle: 'แอพจัดแผนให้ครบทุกอย่าง',
+    planTotal: 'แผนนี้ราคารวม', inBudget: 'อยู่ในงบ', overBudget: 'เกินงบ',
+    shuffle: 'สลับแผนใหม่', day: 'วันที่', arrive: 'เดินทางถึง + เช็คอิน', depart: 'เช็คเอาท์ เดินทางกลับ',
+    freeDay: 'พักผ่อนตามอัธยาศัย — ทะเล คาเฟ่ เดินเล่น', stayLine: 'ที่พักที่เลือกให้ (คุ้มสุดในงบ)',
+    livePriceNote: 'ราคาโดยประมาณ — กด "จอง" เพื่อดูราคาจริงของวันเดินทางคุณ',
+    cityTour: 'ซิตี้ทัวร์ไฮไลท์เมือง', dayTour: 'เดย์ทริปยอดนิยม', localEat: 'อาหารท้องถิ่น / สตรีทฟู้ด',
+    downgradedNote: 'ปรับที่พักให้ถูกลงเพื่อให้อยู่ในงบ', nightsX: 'คืน', total2: 'รวม',
   },
 };
 
@@ -817,13 +831,107 @@ const Core = {
   fmt(n){
     return '฿' + Math.round(n).toLocaleString('en-US');
   },
+
+  // ---- automatic full-trip planner: hotel + day-by-day + meals, best value ----
+  MEAL_COST: [0, 150, 400, 900], // ฿/person by restaurant price level
+
+  costsOf(trip){
+    if (trip.custom) return { costs: trip.custom.costs, flight: trip.custom.flight };
+    const d = DESTS[trip.dest] || DESTS.bangkok;
+    return { costs: d.costs, flight: d.flight };
+  },
+
+  autoPlan(trip){
+    const seed = trip.planSeed || 0;
+    const people = trip.people, nights = trip.nights, rooms = Core.rooms(people);
+    const { costs, flight } = Core.costsOf(trip);
+    const styleRates = costs[trip.style] || costs.mid;
+    const picks = (typeof PICKS !== 'undefined' && PICKS[trip.dest]) || null;
+    const budgetTotal = Core.total(trip.budget);
+    const tiersOrder = { budget: ['budget'], mid: ['mid', 'budget'], comfort: ['comfort', 'mid', 'budget'] }[trip.style] || ['mid', 'budget'];
+
+    // food / transport / flights are tied to the trip's own budget so the
+    // plan always matches; only the hotel (stay) and scheduled activities vary.
+    const foodBudget = trip.budget.food || styleRates[1] * people * nights;
+    const transport = trip.budget.transport || styleRates[2] * people * nights;
+    const flights = trip.budget.flights || 0;
+    const actBudget = trip.budget.act || styleRates[3] * people * nights;
+    const foodPerDay = Math.round(foodBudget / nights);
+
+    const build = (tier) => {
+      // best-value hotel for this tier
+      let hotel = null, stay;
+      if (picks){
+        hotel = picks.h.find(h => h.tier === tier) || picks.h[0];
+        stay = hotel.p * nights * rooms;
+      } else {
+        stay = (costs[tier] || styleRates)[0] * nights * rooms;
+      }
+      const days = [];
+      const acts = picks ? picks.a.slice() : null;
+      const eats = picks ? picks.e.slice() : null;
+      let actSpent = 0, foodTotal = 0;
+      for (let i = 0; i < nights + 1; i++){
+        const slots = [];
+        if (i === 0) slots.push({ type: 'travel', label: 'arrive' });
+        if (i === nights){ slots.push({ type: 'travel', label: 'depart' }); days.push({ day: i + 1, slots }); break; }
+        // one activity per full day (skip the arrival day unless it's the only day),
+        // and only charge paid ones the budget can still afford
+        const isActivityDay = i > 0 || nights === 1;
+        if (isActivityDay){
+          const idx = (nights === 1 ? 0 : i - 1);
+          if (acts && acts.length){
+            const a = acts[(idx + seed) % acts.length];
+            const cost = a.p * people;
+            if (actSpent + cost <= actBudget * 1.15){
+              slots.push({ type: 'act', item: a, cost });
+              actSpent += cost;
+            } else {
+              slots.push({ type: 'act', item: a, cost: 0, free: true }); // suggested, not budgeted
+            }
+          } else {
+            const genCost = styleRates[3] * people;
+            if (actSpent + genCost <= actBudget * 1.15){
+              slots.push({ type: 'actGeneric', label: idx === 0 ? 'cityTour' : 'dayTour', cost: genCost });
+              actSpent += genCost;
+            } else {
+              slots.push({ type: 'free' });
+            }
+          }
+        }
+        // evening meal — cost pinned to the per-day food budget
+        if (eats){
+          const e = eats[(i + seed) % eats.length];
+          slots.push({ type: 'eat', item: e, cost: foodPerDay });
+        } else {
+          slots.push({ type: 'eatGeneric', cost: foodPerDay });
+        }
+        foodTotal += foodPerDay;
+        days.push({ day: i + 1, slots });
+      }
+      const grand = Math.round(stay + actSpent + foodTotal + transport + flights);
+      return { tier, hotel, stay, days, actTotal: actSpent, foodTotal, transport, flights, grand };
+    };
+
+    // best value: start at the trip's style, step down until it fits the budget
+    let plan = null, downgraded = false;
+    for (const tier of tiersOrder){
+      plan = build(tier);
+      if (plan.grand <= budgetTotal * 1.02) break;
+      downgraded = true;
+    }
+    plan.fits = plan.grand <= budgetTotal * 1.02;
+    plan.downgraded = downgraded && plan.fits;
+    plan.budgetTotal = budgetTotal;
+    return plan;
+  },
 };
 
 /* ===== app.js ===== */
 // BudgetTrip UI: hash-routed single-page app.
 // #home | #new | #trip-<id> (+ App.tab for the trip sub-tab)
 const App = {
-  tab: 'budget',
+  tab: 'plan',
   form: { dest: 'chiangmai', style: 'mid', nights: 3, people: 2, start: '', inclFlights: false },
 
   t(k){ return (I18N[Core.state.lang] || I18N.en)[k] || k; },
@@ -1037,7 +1145,7 @@ const App = {
       const trip = f.customSel
         ? Core.newTrip({ dest: 'custom', custom: f.customSel, style: f.style, nights: f.nights, people: f.people, start: f.start, inclFlights: f.inclFlights })
         : Core.newTrip({ dest: f.dest, style: f.style, nights: f.nights, people: f.people, start: f.start, inclFlights: f.inclFlights && !!d.flight });
-      App.tab = 'budget';
+      App.tab = 'plan';
       App.go('trip-' + trip.id);
     };
     w.appendChild(cb);
@@ -1104,8 +1212,8 @@ const App = {
         '<span class="bk-go">' + App.t('pickPlan') + ' ' + icon('chevron') + '</span></div>');
       card.onclick = () => {
         const trip = Core.newTrip({ dest: o.dest, style: o.style, nights: o.nights, people: f.people, start: '', inclFlights: o.inclFlights });
-        App.tab = 'budget';
-        App.toast(App.t('left') + ' ' + Core.fmt(o.left) + ' 🎉');
+        App.tab = 'plan';
+        App.toast(App.t('left') + ' ' + Core.fmt(o.left));
         App.go('trip-' + trip.id);
       };
       w.appendChild(card);
@@ -1138,7 +1246,7 @@ const App = {
       '<div><div class="bn-l">' + App.t('remaining') + '</div><div class="bn-v" style="color:' + (remaining < 0 ? '#e25555' : '#1f9d61') + '">' + Core.fmt(remaining) + '</div></div></div>'));
 
     const tabs = App.el('<div class="tabs"></div>');
-    [['budget', 'budget', 'wallet'], ['expenses', 'expenses', 'receipt'], ['book', 'book', 'tag']].forEach(([k, lk, ic]) => {
+    [['plan', 'planTab', 'calendar'], ['budget', 'budget', 'wallet'], ['expenses', 'expenses', 'receipt'], ['book', 'book', 'tag']].forEach(([k, lk, ic]) => {
       const b = App.el('<button class="' + (App.tab === k ? 'on' : '') + '">' + icon(ic) + ' ' + App.t(lk) + '</button>');
       b.onclick = () => { App.tab = k; App.render(); };
       tabs.appendChild(b);
@@ -1147,7 +1255,8 @@ const App = {
 
     if (App.tab === 'expenses') w.appendChild(App.tabExpenses(trip));
     else if (App.tab === 'book') w.appendChild(App.tabBook(trip));
-    else w.appendChild(App.tabBudget(trip));
+    else if (App.tab === 'budget') w.appendChild(App.tabBudget(trip));
+    else w.appendChild(App.tabPlan(trip));
 
     const del = App.el('<button class="dangerb">' + App.t('deleteTrip') + '</button>');
     del.onclick = () => {
@@ -1155,6 +1264,79 @@ const App = {
       else { del.dataset.armed = '1'; del.textContent = App.t('confirm'); }
     };
     w.appendChild(del);
+    return w;
+  },
+
+  tabPlan(trip){
+    const w = App.el('<div></div>');
+    const plan = Core.autoPlan(trip);
+    const th = Core.state.lang === 'th';
+
+    const fitCls = plan.fits ? 'fit' : 'nofit';
+    const head = App.el('<div class="planhead">' +
+      '<div class="ph-title">' + icon('sparkles') + ' ' + App.t('autoTitle') + '</div>' +
+      '<div class="ph-total">' + App.t('planTotal') + ' <b>' + Core.fmt(plan.grand) + '</b>' +
+      ' <span class="fitchip ' + fitCls + '">' + (plan.fits ? App.t('inBudget') : App.t('overBudget')) + ' · ' + App.t('budget') + ' ' + Core.fmt(plan.budgetTotal) + '</span></div>' +
+      (plan.downgraded ? '<div class="sub">' + App.t('downgradedNote') + '</div>' : '') +
+      '<button class="shufb">' + icon('refresh') + ' ' + App.t('shuffle') + '</button></div>');
+    head.querySelector('.shufb').onclick = () => {
+      trip.planSeed = (trip.planSeed || 0) + 1;
+      Core.save();
+      App.render();
+    };
+    w.appendChild(head);
+
+    // hotel picked for you
+    w.appendChild(App.el('<h2 class="sect">' + icon('bed') + ' ' + App.t('stayLine') + '</h2>'));
+    if (plan.hotel){
+      const h = plan.hotel;
+      w.appendChild(App.el('<a class="pickrow" target="_blank" rel="noopener sponsored" href="' + Links.hotelByName(trip, h.n) + '">' +
+        '<div class="grow"><b>' + App.pickName(h) + '</b>' +
+        '<div class="sub">' + h.area + ' · ' + Core.fmt(h.p) + App.t('perNight') + ' × ' + trip.nights + ' ' + App.t('nightsX') + ' = <b>' + Core.fmt(plan.stay) + '</b></div></div>' +
+        '<span class="pk-btn agoda">' + App.t('bookBtn') + '</span></a>'));
+    } else {
+      w.appendChild(App.el('<a class="pickrow" target="_blank" rel="noopener sponsored" href="' + Links.hotelAgoda(trip) + '">' +
+        '<div class="grow"><b>' + App.tripName(trip) + ' · ' + App.t('bookHotelA') + '</b>' +
+        '<div class="sub">' + App.t('total2') + ' ≈ <b>' + Core.fmt(plan.stay) + '</b> / ' + trip.nights + ' ' + App.t('nightsX') + '</div></div>' +
+        '<span class="pk-btn agoda">' + App.t('bookBtn') + '</span></a>'));
+    }
+    if (plan.flights > 0){
+      w.appendChild(App.el('<a class="pickrow" target="_blank" rel="noopener sponsored" href="' + Links.flights() + '">' +
+        '<div class="grow"><b>' + App.t('flights') + '</b><div class="sub">≈ <b>' + Core.fmt(plan.flights) + '</b></div></div>' +
+        '<span class="pk-btn flightsb">' + App.t('bookBtn') + '</span></a>'));
+    }
+
+    // day by day
+    for (const d of plan.days){
+      const dayEl = App.el('<div class="daycard"><div class="day-h">' + icon('calendar') + ' ' + App.t('day') + ' ' + d.day + '</div></div>');
+      for (const s of d.slots){
+        if (s.type === 'travel'){
+          dayEl.appendChild(App.el('<div class="slot"><span class="slot-ic">' + icon('plane') + '</span><div class="grow">' + App.t(s.label) + '</div></div>'));
+        } else if (s.type === 'act'){
+          dayEl.appendChild(App.el('<a class="slot link" target="_blank" rel="noopener sponsored" href="' + Links.actByName(s.item.n) + '">' +
+            '<span class="slot-ic">' + icon('ticket') + '</span><div class="grow"><b>' + App.pickName(s.item) + '</b>' +
+            '<div class="sub">' + (s.cost > 0 ? '≈ ' + Core.fmt(s.cost) : App.t('freeEntry')) + '</div></div>' +
+            '<span class="pk-btn klook">' + App.t('bookBtn') + '</span></a>'));
+        } else if (s.type === 'actGeneric'){
+          dayEl.appendChild(App.el('<a class="slot link" target="_blank" rel="noopener sponsored" href="' + Links.activities(trip) + '">' +
+            '<span class="slot-ic">' + icon('ticket') + '</span><div class="grow"><b>' + App.t(s.label) + '</b>' +
+            '<div class="sub">≈ ' + Core.fmt(s.cost) + '</div></div>' +
+            '<span class="pk-btn klook">' + App.t('bookBtn') + '</span></a>'));
+        } else if (s.type === 'eat'){
+          dayEl.appendChild(App.el('<a class="slot link" target="_blank" rel="noopener" href="' + Links.placeMap(s.item.n, trip) + '">' +
+            '<span class="slot-ic">' + icon('bowl') + '</span><div class="grow"><b>' + App.pickName(s.item) + '</b>' +
+            '<div class="sub">' + s.item.area + ' · ≈ ' + Core.fmt(s.cost) + '</div></div>' +
+            '<span class="pk-btn map">' + App.t('mapBtn') + '</span></a>'));
+        } else if (s.type === 'eatGeneric'){
+          dayEl.appendChild(App.el('<div class="slot"><span class="slot-ic">' + icon('bowl') + '</span><div class="grow">' + App.t('localEat') +
+            '<div class="sub">≈ ' + Core.fmt(s.cost) + '</div></div></div>'));
+        } else {
+          dayEl.appendChild(App.el('<div class="slot"><span class="slot-ic">' + icon('pin') + '</span><div class="grow">' + App.t('freeDay') + '</div></div>'));
+        }
+      }
+      w.appendChild(dayEl);
+    }
+    w.appendChild(App.el('<div class="disclosure">' + App.t('livePriceNote') + '<br>' + App.t('disclosure') + '</div>'));
     return w;
   },
 

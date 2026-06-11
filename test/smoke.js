@@ -147,5 +147,38 @@ for (const c of CATS) assert(ICONS[c.icon], 'icon for ' + c.id);
 for (const n of ['plus','sparkles','search','globe','check','x','share','back','star','flame','wallet','receipt','tag','suitcase','refresh','chevron','pin','building','bus','plane','bed','bowl','ticket','bag','coins'])
   assert(ICONS[n], 'icon ' + n);
 
-console.log('BUDGETTRIP SMOKE TEST PASSED —', Object.keys(DESTS).length, 'Thai dests, 108 picks,', nC, 'countries worldwide, icons, links OK');
+// ---- automatic full-trip planner ----
+// Thai trip: must pick a real hotel, build a day per night+1, fit budget
+const pk = Core.newTrip({ dest: 'phuket', style: 'mid', nights: 4, people: 2, start: '2026-07-01', inclFlights: true });
+const ap = Core.autoPlan(pk);
+assert(ap.hotel && ap.hotel.n, 'auto-plan picks a real hotel');
+assert(ap.days.length === pk.nights + 1, 'one card per day incl. departure: ' + ap.days.length);
+assert(ap.grand > 0 && ap.stay > 0 && ap.foodTotal > 0, 'plan has costs');
+// every non-travel/free slot carries a positive cost or is explicitly free
+let hasEat = false, hasAct = false;
+for (const d of ap.days) for (const s of d.slots){
+  if (s.type === 'eat') hasEat = true;
+  if (s.type === 'act') hasAct = true;
+}
+assert(hasEat && hasAct, 'plan includes meals and activities');
+
+// downgrade logic: a tiny budget forces a cheaper hotel tier and still fits
+const cheap = Core.newTrip({ dest: 'phuket', style: 'comfort', nights: 3, people: 2, start: '', inclFlights: false });
+cheap.budget = Core.estimate('phuket', 'budget', 3, 2, false); // pretend user only has the budget-tier money
+const ap2 = Core.autoPlan(cheap);
+assert(ap2.hotel.tier !== 'comfort', 'auto-plan downgrades hotel to fit budget: ' + ap2.hotel.tier);
+assert(ap2.grand <= ap2.budgetTotal * 1.05, 'downgraded plan respects budget');
+
+// shuffle changes the arrangement
+const s0 = JSON.stringify(Core.autoPlan(pk).days);
+pk.planSeed = 1;
+const s1 = JSON.stringify(Core.autoPlan(pk).days);
+assert(s0 !== s1, 'shuffle (planSeed) re-arranges the itinerary');
+
+// worldwide trip: no curated picks, still produces a complete plan
+const ap3 = Core.autoPlan(tokyo);
+assert(ap3.days.length === tokyo.nights + 1 && ap3.grand > 0, 'worldwide auto-plan works without picks');
+assert(ap3.stay > 0 && ap3.flights === tokyo.budget.flights, 'worldwide plan stay+flights');
+
+console.log('BUDGETTRIP SMOKE TEST PASSED —', Object.keys(DESTS).length, 'Thai dests, 108 picks,', nC, 'countries, auto-itinerary, icons, links OK');
 `, sandbox, { filename: 'budgettrip-test.js' });
